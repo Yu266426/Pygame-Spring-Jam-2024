@@ -22,6 +22,7 @@ class Player:
 
 		self.on_ground = False
 		self.turn_timer = pygbase.Timer(0.2, True, False)
+		self.fall_timer = pygbase.Timer(0.1, True, False)
 
 		self.acceleration = pygame.Vector2()
 		self.velocity = pygame.Vector2()
@@ -30,11 +31,16 @@ class Player:
 		self.rect = pygame.FRect((0, 0, 40, 80))
 		self.rect.midbottom = self.pos
 
+		self.animation = pygbase.AnimationManager([
+			("idle", pygbase.Animation("sprite_sheets", "player_idle", 0, 4), 4)
+		], "idle")
+
 		self.level = level
 		self.camera = camera
 
 		self.particle_manager = particle_manager
-		self.particle_spawner_pos = self.pos + (0, -50)
+		self.particle_spawner_offset = (0, -25)
+		self.particle_spawner_pos = self.pos + self.particle_spawner_offset
 
 		self.fire_angle_deviation = 3
 		self.fire_velocity_range = (630, 800)
@@ -49,6 +55,7 @@ class Player:
 
 	def movement(self, delta):
 		self.turn_timer.tick(delta)
+		self.fall_timer.tick(delta)
 
 		# X movement
 		input_x = pygbase.InputManager.get_key_pressed(pygame.K_d) - pygbase.InputManager.get_key_pressed(pygame.K_a)
@@ -94,9 +101,11 @@ class Player:
 
 		input_jump = pygbase.InputManager.get_key_pressed(pygame.K_w)
 
-		if self.on_ground and input_jump:
+		if input_jump and (self.on_ground or not self.fall_timer.done()):
+			self.velocity.y = 0
 			self.acceleration.y -= self.jump_impulse / delta
 			pygbase.DebugDisplay.draw_circle((20, 10), 5, "green")
+			self.fall_timer.finish()
 
 		self.velocity.y += self.acceleration.y * delta
 		self.velocity.y = min(max(self.velocity.y, -self.max_speed_y), self.max_speed_y)
@@ -104,6 +113,7 @@ class Player:
 		self.pos.y += self.velocity.y * delta + 0.5 * self.acceleration.y * (delta ** 2)
 		self.rect.midbottom = self.pos
 
+		prev_on_ground = self.on_ground
 		self.on_ground = False
 		for rect in self.level_colliders:
 			if self.rect.colliderect(rect):
@@ -116,9 +126,14 @@ class Player:
 					self.pos.y = rect.bottom + self.rect.height
 					self.velocity.y = 0
 
+		if prev_on_ground and not self.on_ground and input_jump == 0:
+			self.fall_timer.start()
+
 		self.rect.midbottom = self.pos
 
 	def update(self, delta: float):
+		self.animation.update(delta)
+
 		particle_collision_positions = self.collision_particle_group.update(delta)
 
 		for particle_collision_position in particle_collision_positions:
@@ -131,7 +146,7 @@ class Player:
 		self.collision_particle_timer.tick(delta)
 
 		self.movement(delta)
-		self.particle_spawner_pos.update(self.pos + (0, -50))
+		self.particle_spawner_pos.update(self.pos + self.particle_spawner_offset)
 
 		if pygbase.InputManager.get_mouse_pressed(0):
 			mouse_world_pos = self.camera.screen_to_world(pygame.mouse.get_pos())
@@ -153,6 +168,6 @@ class Player:
 			self.collision_particle_timer.finish()
 
 	def draw(self, surface: pygame.Surface, camera: pygbase.Camera):
-		pygame.draw.rect(surface, "blue", (camera.world_to_screen(self.rect.topleft), self.rect.size))
+		self.animation.draw_at_pos(surface, self.pos, camera, draw_pos="midbottom")
 
 # self.collision_particle_group.draw(surface, camera)
