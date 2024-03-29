@@ -31,15 +31,18 @@ class Player:
 		self.rect = pygame.FRect((0, 0, 40, 80))
 		self.rect.midbottom = self.pos
 
+		self.flip_x = False
 		self.animation = pygbase.AnimationManager([
-			("idle", pygbase.Animation("sprite_sheets", "player_idle", 0, 4), 4)
+			("idle", pygbase.Animation("sprite_sheets", "player_idle", 0, 4), 4),
+			("run", pygbase.Animation("sprite_sheets", "player_walk", 0, 4), 8),
+			("slowing", pygbase.Animation("sprite_sheets", "player_walk", 0, 4), 6)
 		], "idle")
 
 		self.level = level
 		self.camera = camera
 
 		self.particle_manager = particle_manager
-		self.particle_spawner_offset = (0, -25)
+		self.particle_spawner_offset = (0, -50)
 		self.particle_spawner_pos = self.pos + self.particle_spawner_offset
 
 		self.fire_angle_deviation = 3
@@ -60,6 +63,12 @@ class Player:
 		# X movement
 		input_x = pygbase.InputManager.get_key_pressed(pygame.K_d) - pygbase.InputManager.get_key_pressed(pygame.K_a)
 		if input_x != 0:
+			self.animation.switch_state("run")
+			if input_x < 0:
+				self.flip_x = True
+			elif input_x > 0:
+				self.flip_x = False
+
 			if not self.turn_timer.done():  # Turning
 				self.acceleration.x = input_x * self.acceleration_speed * 2
 				pygbase.DebugDisplay.draw_circle((10, 10), 5, "yellow")
@@ -69,6 +78,8 @@ class Player:
 			if abs(self.velocity.x) > 200 and input_x != get_sign(self.velocity.x):
 				self.turn_timer.start()
 		else:
+			self.animation.switch_state("slowing")
+
 			if self.on_ground:
 				self.acceleration.x = -self.velocity.x * self.damping
 			else:
@@ -146,6 +157,9 @@ class Player:
 		self.collision_particle_timer.tick(delta)
 
 		self.movement(delta)
+		if abs(self.velocity.x) < 2:
+			self.animation.switch_state("idle")
+
 		self.particle_spawner_pos.update(self.pos + self.particle_spawner_offset)
 
 		if pygbase.InputManager.get_mouse_pressed(0):
@@ -168,6 +182,6 @@ class Player:
 			self.collision_particle_timer.finish()
 
 	def draw(self, surface: pygame.Surface, camera: pygbase.Camera):
-		self.animation.draw_at_pos(surface, self.pos, camera, draw_pos="midbottom")
+		self.animation.draw_at_pos(surface, self.pos, camera, flip=(self.flip_x, False), draw_pos="midbottom")
 
 # self.collision_particle_group.draw(surface, camera)

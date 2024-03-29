@@ -3,6 +3,22 @@
     "scale": 4,
     "rotatable": false
   },
+  "deep_road_1": {
+    "scale": 4,
+    "rotatable": false
+  },
+  "deep_road_bottom_end_dirt_1": {
+    "scale": 4,
+    "rotatable": false
+  },
+  "deep_road_bottom_left_end_dirt_1": {
+    "scale": 4,
+    "rotatable": false
+  },
+  "deep_road_left_end_dirt_1": {
+    "scale": 4,
+    "rotatable": false
+  },
   "dirt_1": {
     "scale": 4,
     "rotatable": false
@@ -16,6 +32,22 @@
     "rotatable": false
   },
   "ground_2": {
+    "scale": 4,
+    "rotatable": false
+  },
+  "road_1": {
+    "scale": 4,
+    "rotatable": false
+  },
+  "road_2": {
+    "scale": 4,
+    "rotatable": false
+  },
+  "road_3": {
+    "scale": 4,
+    "rotatable": false
+  },
+  "road_end_left_dirt": {
     "scale": 4,
     "rotatable": false
   }

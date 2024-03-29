@@ -59,7 +59,8 @@ if __name__ == '__main__':
 
 	pygbase.add_image_resource("tiles", 0, str(ASSET_DIR / "tiles"), default_scale=4)
 	pygbase.add_sprite_sheet_resource("tile_sheets", 1, str(ASSET_DIR / "tile_sheets"), default_scale=4)
-	pygbase.add_image_resource("ui", 2, str(ASSET_DIR / "ui"))
+	pygbase.add_sprite_sheet_resource("sprite_sheets", 2, str(ASSET_DIR / "sprite_sheets"), default_scale=4)
+	pygbase.add_image_resource("ui", 3, str(ASSET_DIR / "ui"))
 
 	if DO_PROFILE:
 		profiler = cProfile.Profile()
