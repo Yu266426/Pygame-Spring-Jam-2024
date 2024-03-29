@@ -1,0 +1,22 @@
+{
+  "deep_dirt_1": {
+    "scale": 4,
+    "rotatable": false
+  },
+  "dirt_1": {
+    "scale": 4,
+    "rotatable": false
+  },
+  "dirt_2": {
+    "scale": 4,
+    "rotatable": false
+  },
+  "ground_1": {
+    "scale": 4,
+    "rotatable": false
+  },
+  "ground_2": {
+    "scale": 4,
+    "rotatable": false
+  }
+}

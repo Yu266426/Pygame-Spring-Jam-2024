@@ -1,0 +1,18 @@
+{
+  "down": {
+    "scale": 1,
+    "rotatable": false
+  },
+  "left": {
+    "scale": 1,
+    "rotatable": false
+  },
+  "right": {
+    "scale": 1,
+    "rotatable": false
+  },
+  "up": {
+    "scale": 1,
+    "rotatable": false
+  }
+}

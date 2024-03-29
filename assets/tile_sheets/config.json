@@ -1,0 +1,10 @@
+{
+  "building_1": {
+    "rows": 2,
+    "columns": 6,
+    "tile_width": 16,
+    "tile_height": 16,
+    "scale": 0,
+    "rotatable": false
+  }
+}
