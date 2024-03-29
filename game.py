@@ -16,7 +16,7 @@ class Game(pygbase.GameState, name="game"):
 
 		self.water_monster_group = WaterMonsterGroup()
 		for i in range(100):
-			self.water_monster_group.water_monsters.append(WaterMonster((100 + 300 * i, 0)))
+			self.water_monster_group.water_monsters.append(WaterMonster((100 + 300 * i, 0), self.level))
 
 		player_spawn_pos = (0, 0)
 		self.camera = pygbase.Camera(player_spawn_pos - pygame.Vector2(pygbase.Common.get_value("screen_size")) / 2)

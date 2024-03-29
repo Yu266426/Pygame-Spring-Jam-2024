@@ -10,7 +10,7 @@ from particle_collider import CollisionParticleGroup
 
 class Player:
 	def __init__(self, pos: tuple, level: Level, camera: pygbase.Camera, particle_manager: pygbase.ParticleManager) -> None:
-		self.gravity = 1600
+		self.gravity = pygbase.Common.get_value("gravity")
 		self.gravity_down_multiplier = 1.5
 
 		self.max_speed_x = 500

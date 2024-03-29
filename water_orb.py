@@ -18,7 +18,7 @@ class WaterOrb:
 
 		self.attraction_offset = pygame.Vector2(attraction_offset)
 
-	def update(self, delta: float, attraction_point: pygame.Vector2 | tuple, deflectors):
+	def update(self, delta: float, attraction_point: pygame.Vector2 | tuple, deflectors: list[pygame.Vector2], outside_velocity: pygame.Vector2):
 		self.acceleration.y = 30  # Gravity
 
 		# This is the most messed up physics I've ever written
@@ -50,7 +50,7 @@ class WaterOrb:
 		self.acceleration.x += self.velocity.x * -4.0 * delta  # Damp the x
 
 		self.velocity += self.acceleration * delta
-		self.pos += self.velocity * delta + 0.5 * self.acceleration * (delta ** 2)
+		self.pos += (self.velocity - outside_velocity) * delta + 0.5 * self.acceleration * (delta ** 2)
 
 	def draw_water(self, surface: pygame.Surface):
 		pygame.draw.circle(surface, self.color, self.pos, self.size)
@@ -70,7 +70,7 @@ class WaterOrbGroup:
 		self.water_colors = water_colors
 		self.water_alpha = water_alpha
 
-		surface_size_multiplier = 12
+		surface_size_multiplier = 15
 		self.outline_draw_surface = pygame.Surface((int(orb_size_range[1] * surface_size_multiplier), int(orb_size_range[1] * surface_size_multiplier)), flags=pygame.SRCALPHA)
 
 		self.water_draw_surfaces: dict[str | tuple, pygame.Surface] = {}
@@ -96,13 +96,13 @@ class WaterOrbGroup:
 		self.pos = pos
 		return self
 
-	def update(self, delta: float):
+	def update(self, delta: float, outside_velocity: pygame.Vector2):
 		camera: pygbase.Camera = pygbase.Common.get_value("camera")
 		pygbase.DebugDisplay.draw_circle(camera.world_to_screen(self.pos + self.offset), 5, "yellow")
 
 		for water_orbs in self.water_orbs.values():
 			for orb in water_orbs:
-				orb.update(delta, self.center, [deflect_orb.pos for deflect_orb in water_orbs if deflect_orb is not orb and deflect_orb.pos.distance_to(orb.pos) < 15])
+				orb.update(delta, self.center, [deflect_orb.pos for deflect_orb in water_orbs if deflect_orb is not orb and deflect_orb.pos.distance_to(orb.pos) < 15], outside_velocity)
 
 	def draw(self, surface: pygame.Surface, camera: pygbase.Camera):
 		self.outline_draw_surface.fill((0, 0, 0, 0))

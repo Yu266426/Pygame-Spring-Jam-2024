@@ -54,6 +54,7 @@ if __name__ == '__main__':
 	)
 
 	pygbase.Common.set_value("tile_size", (16 * 4, 16 * 4))
+	pygbase.Common.set_value("gravity", 1600)
 
 	pygbase.EventManager.add_handler("all", pygame.KEYDOWN, lambda e: pygbase.EventManager.post_event(pygame.QUIT) if e.key == pygame.K_ESCAPE else None)
 
