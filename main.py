@@ -17,7 +17,7 @@ if __name__ == '__main__':
 	if "-game" in cl_args and "-editor" in cl_args:
 		raise ValueError("`-game` and `-editor` are mutually exclusive")
 
-	pygbase.init((800, 800))
+	pygbase.init((800, 800), max_light_radius=0)
 
 	if DEBUG:
 		pygbase.DebugDisplay.show()
@@ -39,6 +39,16 @@ if __name__ == '__main__':
 		(5, 8),
 		(0, 1),
 		(0, -2),
+		True,
+		((0.0, 0.1), (0.0, 0.4))
+	)
+	pygbase.add_particle_setting(
+		"smoke",
+		[(10 * i, 10 * i, 10 * i) for i in range(7, 10)],
+		(3, 10),
+		(7, 10),
+		(0, 0),
+		(0, -5),
 		True,
 		((0.0, 0.1), (0.0, 0.4))
 	)

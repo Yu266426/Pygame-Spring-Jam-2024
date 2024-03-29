@@ -187,7 +187,7 @@ class Editor(pygbase.GameState, name="editor"):
 				tile_selector.active = False
 				continue
 
-			if tile_selector_name == self.current_sheet:
+			if tile_selector_name == self.sheet_selector.get_current_text():
 				tile_selector.active = True
 			else:
 				tile_selector.active = False
@@ -217,10 +217,10 @@ class Editor(pygbase.GameState, name="editor"):
 		if pygbase.InputManager.get_key_just_pressed(pygame.K_s) and (pygbase.InputManager.check_modifiers(pygame.KMOD_CTRL) or pygbase.InputManager.check_modifiers(pygame.KMOD_META)):
 			self.level.save()
 
-		if not self.ui.on_ui():
-			if not (pygbase.InputManager.get_key_pressed(pygame.K_s) and (pygbase.InputManager.check_modifiers(pygame.KMOD_CTRL) or pygbase.InputManager.check_modifiers(pygame.KMOD_META))):
-				self.camera_controller.update(delta)
+		if not (pygbase.InputManager.get_key_pressed(pygame.K_s) and (pygbase.InputManager.check_modifiers(pygame.KMOD_CTRL) or pygbase.InputManager.check_modifiers(pygame.KMOD_META))):
+			self.camera_controller.update(delta)
 
+		if not self.ui.on_ui():
 			mouse_pos = self.camera_controller.camera.screen_to_world(pygame.mouse.get_pos())
 			mouse_tile_pos = self.level.get_tile_pos(mouse_pos)
 
@@ -235,8 +235,6 @@ class Editor(pygbase.GameState, name="editor"):
 						self.level.add_sheet_tile(mouse_tile_pos, self.get_current_tile_layer(), self.current_sheet, self.current_sheet_index)
 					if pygbase.InputManager.get_mouse_pressed(2):
 						self.level.remove_tile(mouse_tile_pos, self.get_current_tile_layer())
-
-				# print(self.current_sheet, self.current_sheet_index)
 
 	def draw(self, surface: pygame.Surface):
 		surface.fill("black")
