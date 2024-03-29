@@ -5,43 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5e716f3a-44ea-42ac-ba11-3585d3b1504c" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/Pygame-Spring-Jam-2024.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/art/.building_1.kra-autosave.kra" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/art/building_1.kra" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/art/deep_dirt_1.kra" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/art/dirt_1.kra" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/art/dirt_2.kra" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/art/ground_1.kra" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/art/ground_2.kra" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/levels/level.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/tile_sheets/building_1.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/tile_sheets/config.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/tiles/config.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/tiles/deep_dirt_1.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/tiles/dirt_1.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/tiles/dirt_2.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/tiles/ground_1.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/tiles/ground_2.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/ui/config.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/ui/down.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/ui/left.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/ui/right.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/ui/up.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/editor.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/files.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/game.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/level.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/particle_collider.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/player.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tile.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/art/.building_1.kra-autosave.kra" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/art/building_1.kra" beforeDir="false" afterPath="$PROJECT_DIR$/art/building_1.kra" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/tile_sheets/building_1.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/tile_sheets/building_1.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/tile_sheets/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/assets/tile_sheets/config.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor.py" beforeDir="false" afterPath="$PROJECT_DIR$/editor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/game.py" beforeDir="false" afterPath="$PROJECT_DIR$/game.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

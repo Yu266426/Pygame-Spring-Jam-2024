@@ -13,7 +13,7 @@ class Game(pygbase.GameState, name="game"):
 		self.particle_manager = pygbase.ParticleManager(chunk_size=pygbase.Common.get_value("tile_size")[0], colliders=self.level.get_colliders())
 		# self.particle_manager = pygbase.ParticleManager()
 
-		player_spawn_pos = (0, -150)
+		player_spawn_pos = (0, 0)
 		self.camera = pygbase.Camera(player_spawn_pos - pygame.Vector2(pygbase.Common.get_value("screen_size")) / 2)
 		self.player = Player(player_spawn_pos, self.level, self.camera, self.particle_manager)
 

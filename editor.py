@@ -90,8 +90,8 @@ class Editor(pygbase.GameState, name="editor"):
 			bg_colour=(80, 80, 80, 80)
 		))
 		max_tile_cols = int((1.0 - 0.01) / (0.01 + 0.085))
-		for index, tile_name in enumerate(tile_names):  # If at the end, go to next row
-			if index == max_tile_cols:
+		for index, tile_name in enumerate(tile_names):
+			if index != 0 and index % max_tile_cols == 0:  # If at the end, go to next row
 				add_on = (False, True)
 				align = (False, False)
 			else:
@@ -148,10 +148,10 @@ class Editor(pygbase.GameState, name="editor"):
 			))
 
 			sprite_sheet: pygbase.SpriteSheet = self.sprite_sheets[sprite_sheet_name]
-			total_images = sprite_sheet.n_cols * sprite_sheet.n_rows
+			num_images = sprite_sheet.n_cols * sprite_sheet.n_rows
 
-			for index in range(total_images):
-				if index == sprite_sheet.n_cols:  # If at the end, go to next row
+			for index in range(num_images):
+				if index != 0 and index % sprite_sheet.n_cols == 0:  # If at the end, go to next row
 					add_on = (False, True)
 					align = (False, False)
 				else:
@@ -236,10 +236,12 @@ class Editor(pygbase.GameState, name="editor"):
 					if pygbase.InputManager.get_mouse_pressed(2):
 						self.level.remove_tile(mouse_tile_pos, self.get_current_tile_layer())
 
+				# print(self.current_sheet, self.current_sheet_index)
+
 	def draw(self, surface: pygame.Surface):
 		surface.fill("black")
 
-		# Reference
+		# World Reference
 		center_point = self.camera_controller.camera.world_to_screen((0, 0))
 		pygame.draw.line(surface, "yellow", (0, center_point[1]), (800, center_point[1]))
 
