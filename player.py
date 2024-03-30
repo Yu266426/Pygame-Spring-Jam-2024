@@ -3,6 +3,9 @@ import random
 import pygame
 import pygame.geometry
 import pygbase
+
+from health import Health
+from temperature import Temperature
 from utils import get_sign
 
 from level import Level
@@ -29,7 +32,7 @@ class Player:
 		self.velocity = pygame.Vector2()
 		self.pos = pygame.Vector2(pos)
 
-		self.rect = pygame.FRect((0, 0, 40, 80))
+		self.rect = pygame.FRect((0, 0, 30, 110))
 		self.rect.midbottom = self.pos
 
 		self.flip_x = False
@@ -51,7 +54,7 @@ class Player:
 		self.particle_spawner_towards_mouse_offset = 32
 		self.particle_spawner_pos = self.pos + self.particle_spawner_offset
 
-		self.fire_angle_deviation = 3
+		self.fire_angle_deviation = 2
 		self.fire_velocity_range = (630, 800)
 		self.flamethrower_spawner = particle_manager.add_spawner(pygbase.PointSpawner(self.pos, 0.01, 2, False, "flamethrower", particle_manager, velocity_range=self.fire_velocity_range).link_pos(self.particle_spawner_pos))
 		self.gun_tip_fire_spawner = particle_manager.add_spawner(pygbase.CircleSpawner(self.pos, 0.2, 3, 10, False, "fire", particle_manager, radial_velocity_range=(0, 20)).link_pos(self.particle_spawner_pos))
@@ -60,7 +63,13 @@ class Player:
 
 		self.level_colliders = self.level.get_colliders()
 
-		self.gun_angle = 0
+		self.temperature = Temperature(self.pos, cooling_speed=15).link_pos(self.pos)
+		gun_duration_secs = 3
+		self.gun_heat = (self.temperature.cooling_speed + self.temperature.max_temperature / gun_duration_secs)
+
+		self.can_fire = True
+
+		self.health = Health(100)
 
 	def movement(self, delta):
 		self.turn_timer.tick(delta)
@@ -150,7 +159,9 @@ class Player:
 		self.rect.midbottom = self.pos
 
 	def update(self, delta: float):
-		self.gun_angle += 0.01
+		self.temperature.tick(delta)
+		if self.temperature.get_percentage() < 0.8:
+			self.can_fire = True
 
 		self.collision_particle_timer.tick(delta)
 
@@ -165,7 +176,7 @@ class Player:
 
 		self.particle_spawner_pos.update(self.pos + self.particle_spawner_offset + pygbase.utils.get_angled_vector(angle_to_mouse, self.particle_spawner_towards_mouse_offset))
 
-		if pygbase.InputManager.get_mouse_pressed(0):
+		if pygbase.InputManager.get_mouse_pressed(0) and self.can_fire:
 			self.flamethrower_spawner.angle_range = (angle_to_mouse - self.fire_angle_deviation, angle_to_mouse + self.fire_angle_deviation)
 
 			mouse_vector = pygbase.utils.get_angled_vector(angle_to_mouse, 1)
@@ -178,10 +189,14 @@ class Player:
 				self.collision_particle_group.add_particle(self.particle_spawner_pos, pygbase.utils.get_angled_vector(random.uniform(*self.flamethrower_spawner.angle_range), random.uniform(*self.flamethrower_spawner.velocity_range)))
 
 				self.collision_particle_timer.start()
+
+			self.temperature.heat(self.gun_heat * delta)
+
+			if not self.temperature.not_maxed():
+				self.can_fire = False
 		else:
 			self.flamethrower_spawner.active = False
 			self.gun_tip_fire_spawner.active = False
-			self.collision_particle_timer.finish()
 
 	def draw(self, surface: pygame.Surface, camera: pygbase.Camera):
 		self.animation.draw_at_pos(surface, self.pos, camera, flip=(self.flip_x, False), draw_pos="midbottom")
@@ -192,3 +207,8 @@ class Player:
 		flip_y = 90 < angle_to_mouse % 360 < 270
 
 		self.fire_gun.draw(surface, camera.world_to_screen(self.pos + self.particle_spawner_offset), angle=angle_to_mouse, flip=(False, flip_y), draw_pos="center")
+
+	def draw_ui(self, surface: pygame.Surface, camera: pygbase.Camera):
+		self.temperature.draw(surface, camera)
+
+		print(self.health.health)

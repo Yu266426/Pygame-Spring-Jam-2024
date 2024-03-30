@@ -24,7 +24,7 @@ class CollisionParticleGroup:
 			if collision_pos is not None:
 				collision_positions.append(collision_pos)
 
-		self.particles = [particle for particle in self.particles if particle.alive()]
+		self.particles[:] = [particle for particle in self.particles if particle.alive()]
 
 		return collision_positions
 

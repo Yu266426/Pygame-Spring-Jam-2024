@@ -62,6 +62,16 @@ if __name__ == '__main__':
 		True,
 		((0.0, 0.1), (0.0, 0.4))
 	)
+	pygbase.add_particle_setting(
+		"boiled_water",
+		["light blue"],
+		(5, 8),
+		(6, 8),
+		(0, 0),
+		(0, -10),
+		True,
+		((0.0, 0.1), (0.0, 0.4))
+	)
 
 	pygbase.Common.set_value("tile_size", (16 * 4, 16 * 4))
 	pygbase.Common.set_value("gravity", 1600)

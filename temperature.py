@@ -16,13 +16,13 @@ class Temperature:
 		return self
 
 	def heat(self, amount: float):
-		self.temperature += amount
+		self.temperature = min(self.temperature + amount, self.max_temperature)
 
 	def tick(self, delta: float):
-		self.temperature -= self.cooling_speed * delta
+		self.temperature = max(self.temperature - self.cooling_speed * delta, 0)
 
-	def not_maxed(self) -> bool:
-		return self.temperature < self.max_temperature
+	def not_maxed(self, buffer: float = 0.1) -> bool:
+		return self.temperature < self.max_temperature - buffer
 
 	def get_percentage(self) -> float:
 		return self.temperature / self.max_temperature

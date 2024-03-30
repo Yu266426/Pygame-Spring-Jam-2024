@@ -6,6 +6,8 @@ import pygbase
 from level import Level
 from particle_collider import CollisionParticleGroup
 from player import Player
+from projectiles import ProjectileGroup, GarbageProjectile
+from utils import get_sign
 from water_monster import WaterMonster, WaterMonsterGroup
 
 
@@ -19,10 +21,11 @@ class Game(pygbase.GameState, name="game"):
 
 		self.level = Level()
 		self.particle_manager = pygbase.ParticleManager(chunk_size=pygbase.Common.get_value("tile_size")[0], colliders=self.level.get_colliders())
+		self.projectile_group = ProjectileGroup(self.level)
 
 		self.water_monster_group = WaterMonsterGroup()
 		for i in range(1000):
-			self.water_monster_group.water_monsters.append(WaterMonster((100 + 200 * i, 0), self.level, self.particle_manager))
+			self.water_monster_group.water_monsters.append(WaterMonster((500 + 200 * i, 0), self.level, self.particle_manager, self.projectile_group))
 
 		self.collision_particle_group = CollisionParticleGroup("flamethrower", self.level.get_colliders())
 		self.fire_particle_settings = pygbase.Common.get_particle_setting("fire")
@@ -39,8 +42,12 @@ class Game(pygbase.GameState, name="game"):
 		self.particle_manager.update(delta)
 		particle_collision_positions = self.collision_particle_group.update(delta, water_monster_colliders)
 
-		particle_collision_circle_colliders = []
+		hits = self.projectile_group.update(delta, [self.player.rect])
+		for hit in hits:
+			if hit[0].colliderect(self.player.rect):
+				self.player.health.damage(hit[1])
 
+		particle_collision_circle_colliders = []
 		for particle_collision_position in particle_collision_positions:
 			for _ in range(random.randint(5, 10)):
 				self.particle_manager.add_particle(particle_collision_position + pygbase.utils.get_angled_vector(random.uniform(0, 360), random.uniform(0, 20)), self.fire_particle_settings)
@@ -56,6 +63,18 @@ class Game(pygbase.GameState, name="game"):
 
 		self.camera.lerp_to_target(self.player.pos - pygame.Vector2(pygbase.Common.get_value("screen_size")) / 2, 2 * delta)
 
+		mouse_pos = self.camera.screen_to_world(pygame.Vector2(pygame.mouse.get_pos()))
+		towards_player_vec = self.player.pos - mouse_pos
+
+		if pygbase.InputManager.get_key_pressed(pygame.K_p):
+			initial_x_velocity = towards_player_vec.normalize().x * 500
+			throw_vec = pygame.Vector2(
+				initial_x_velocity,
+				-((0.5 * 1600 * (towards_player_vec.x ** 2) / initial_x_velocity) - towards_player_vec.y * initial_x_velocity) / towards_player_vec.x
+			)
+
+			self.projectile_group.add_projectile(GarbageProjectile(mouse_pos, throw_vec, self.level.get_colliders()))
+
 	def draw(self, surface: pygame.Surface):
 		surface.fill((230, 240, 253))
 		self.outline_draw_surface.fill((0, 0, 0, 0))
@@ -65,8 +84,10 @@ class Game(pygbase.GameState, name="game"):
 		near_water_monsters = self.water_monster_group.get_monsters(self.player.pos)
 		self.level.draw(surface, self.camera, [self.player, *near_water_monsters], 0)
 
+		self.projectile_group.draw(surface, self.camera)
+
 		self.particle_manager.draw(surface, self.camera)
-		# self.collision_particle_group.draw(surface, camera)
+		# self.collision_particle_group.draw(surface, self.camera)
 
 		for water_draw_surface in self.water_draw_surfaces.values():
 			water_draw_surface.fill((255, 255, 255, self.water_alpha), special_flags=pygame.BLEND_RGBA_MIN)
@@ -76,3 +97,5 @@ class Game(pygbase.GameState, name="game"):
 
 		for water_monster in near_water_monsters:
 			water_monster.draw_ui(surface, self.camera)
+
+		self.player.draw_ui(surface, self.camera)

@@ -14,5 +14,13 @@
     "tile_height": 32,
     "scale": 0,
     "rotatable": false
+  },
+  "small_garbage": {
+    "rows": 1,
+    "columns": 4,
+    "tile_width": 8,
+    "tile_height": 8,
+    "scale": 0,
+    "rotatable": true
   }
 }
