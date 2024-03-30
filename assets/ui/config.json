@@ -3,6 +3,10 @@
     "scale": 1,
     "rotatable": false
   },
+  "eye": {
+    "scale": 1,
+    "rotatable": false
+  },
   "left": {
     "scale": 1,
     "rotatable": false

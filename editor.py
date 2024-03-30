@@ -26,6 +26,24 @@ class Editor(pygbase.GameState, name="editor"):
 			bg_colour=(40, 40, 40, 40)
 		))
 
+		self.hide_other_layers = False
+		self.tile_layer_ui = None
+		self.tile_layer_text = None
+		self.create_tile_layer_ui()
+
+		self.tile_editing_ui = None
+		self.current_tile = None
+		self.create_tile_edit_ui()
+
+		self.sheet_tile_editing_ui = None
+		self.sprite_sheets = pygbase.ResourceManager.get_resources_of_type("tile_sheets")
+		self.sprite_sheet_tile_frames = None
+		self.sheet_selector = None
+		self.current_sheet = None
+		self.current_sheet_index = 0
+		self.create_sheet_tile_edit_ui()
+
+	def create_tile_layer_ui(self):
 		self.tile_layer_ui = self.ui.add_frame(pygbase.Frame(
 			(pygbase.UIValue(0), pygbase.UIValue(0)),
 			(pygbase.UIValue(1, False), pygbase.UIValue(1, False)),
@@ -58,17 +76,13 @@ class Editor(pygbase.GameState, name="editor"):
 			self.tile_layer_down_button_callback
 		), add_on_to_previous=(False, True), align_with_previous=(True, False))
 
-		self.tile_editing_ui = None
-		self.current_tile = None
-		self.create_tile_edit_ui()
-
-		self.sheet_tile_editing_ui = None
-		self.sprite_sheets = pygbase.ResourceManager.get_resources_of_type("tile_sheets")
-		self.sprite_sheet_tile_frames = None
-		self.sheet_selector = None
-		self.current_sheet = None
-		self.current_sheet_index = 0
-		self.create_sheet_tile_edit_ui()
+		self.tile_layer_ui.add_element(pygbase.Button(
+			(pygbase.UIValue(0), pygbase.UIValue(0.01, False)),
+			(pygbase.UIValue(0), pygbase.UIValue(0.05, False)),
+			"ui", "eye",
+			self.tile_layer_ui,
+			self.hide_layers_button_callback
+		), add_on_to_previous=(False, True), align_with_previous=(True, False))
 
 	def create_tile_edit_ui(self):
 		self.tile_editing_ui = self.ui.add_frame(pygbase.Frame(
@@ -177,6 +191,9 @@ class Editor(pygbase.GameState, name="editor"):
 	def tile_selection_button_callback(self, tile_name: str):
 		self.current_tile = tile_name
 
+	def hide_layers_button_callback(self):
+		self.hide_other_layers = not self.hide_other_layers
+
 	def sheet_tile_selection_button_callback(self, sprite_sheet_name: str, index: int):
 		self.current_sheet = sprite_sheet_name
 		self.current_sheet_index = index
@@ -248,9 +265,15 @@ class Editor(pygbase.GameState, name="editor"):
 		# Level
 		match (self.mode_selector.get_current_text()):
 			case "Tile":
-				self.level.layered_editor_draw(surface, self.camera_controller.camera, self.get_current_tile_layer())
+				if not self.hide_other_layers:
+					self.level.layered_editor_draw(surface, self.camera_controller.camera, self.get_current_tile_layer())
+				else:
+					self.level.single_level_draw(surface, self.camera_controller.camera, self.get_current_tile_layer())
 			case "Sheet":
-				self.level.layered_editor_draw(surface, self.camera_controller.camera, self.get_current_tile_layer())
+				if not self.hide_other_layers:
+					self.level.layered_editor_draw(surface, self.camera_controller.camera, self.get_current_tile_layer())
+				else:
+					self.level.single_level_draw(surface, self.camera_controller.camera, self.get_current_tile_layer())
 			case _:
 				self.level.editor_draw(surface, self.camera_controller.camera)
 

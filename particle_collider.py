@@ -15,11 +15,12 @@ class CollisionParticleGroup:
 	def add_particle(self, pos: tuple | pygame.Vector2, initial_velocity=(0, 0)):
 		self.particles.append(CollisionParticle(pos, self.particle_settings, initial_velocity))
 
-	def update(self, delta: float):
+	def update(self, delta: float, dynamic_colliders: list[pygame.Rect]):
 		collision_positions = []
 
+		colliders = [*self.colliders, *dynamic_colliders]
 		for particle in self.particles:
-			collision_pos = particle.update(delta, self.colliders)
+			collision_pos = particle.update(delta, colliders)
 			if collision_pos is not None:
 				collision_positions.append(collision_pos)
 

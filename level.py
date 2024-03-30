@@ -127,3 +127,8 @@ class Level:
 			else:
 				for tile in layer.values():
 					tile.editor_draw_dark(surface, camera)
+
+	def single_level_draw(self, surface: pygame.Surface, camera: pygbase.Camera, current_layer: int):
+		if current_layer in self.tiles:
+			for tile in self.tiles[current_layer].values():
+				tile.draw(surface, camera)

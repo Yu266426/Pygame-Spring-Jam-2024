@@ -1,7 +1,10 @@
+import random
+
 import pygame
 import pygbase
 
 from level import Level
+from particle_collider import CollisionParticleGroup
 from player import Player
 from water_monster import WaterMonster, WaterMonsterGroup
 
@@ -10,26 +13,44 @@ class Game(pygbase.GameState, name="game"):
 	def __init__(self):
 		super().__init__()
 
-		self.level = Level()
-		self.particle_manager = pygbase.ParticleManager(chunk_size=pygbase.Common.get_value("tile_size")[0], colliders=self.level.get_colliders())
-
 		self.water_alpha = pygbase.Common.get_value("water_alpha")
 		self.outline_draw_surface: pygame.Surface = pygbase.Common.get_value("water_outline_surface")
 		self.water_draw_surfaces: dict[str | tuple, pygame.Surface] = pygbase.Common.get_value("water_surfaces")
 
+		self.level = Level()
+		self.particle_manager = pygbase.ParticleManager(chunk_size=pygbase.Common.get_value("tile_size")[0], colliders=self.level.get_colliders())
+
 		self.water_monster_group = WaterMonsterGroup()
-		for i in range(100):
-			self.water_monster_group.water_monsters.append(WaterMonster((100 + 300 * i, 0), self.level, self.particle_manager))
+		for i in range(1000):
+			self.water_monster_group.water_monsters.append(WaterMonster((100 + 200 * i, 0), self.level, self.particle_manager))
+
+		self.collision_particle_group = CollisionParticleGroup("flamethrower", self.level.get_colliders())
+		self.fire_particle_settings = pygbase.Common.get_particle_setting("fire")
+		self.smoke_particle_settings = pygbase.Common.get_particle_setting("smoke")
 
 		player_spawn_pos = (0, 0)
 		self.camera = pygbase.Camera(player_spawn_pos - pygame.Vector2(pygbase.Common.get_value("screen_size")) / 2)
 		pygbase.Common.set_value("camera", self.camera)
-		self.player = Player(player_spawn_pos, self.level, self.camera, self.particle_manager)
+		self.player = Player(player_spawn_pos, self.level, self.camera, self.particle_manager, self.collision_particle_group)
 
 	def update(self, delta: float):
+		water_monster_colliders = self.water_monster_group.get_colliders(self.player.pos)
+		self.particle_manager.pass_dynamic_colliders(water_monster_colliders)
 		self.particle_manager.update(delta)
+		particle_collision_positions = self.collision_particle_group.update(delta, water_monster_colliders)
 
-		self.water_monster_group.update(delta, self.player.pos)
+		particle_collision_circle_colliders = []
+
+		for particle_collision_position in particle_collision_positions:
+			for _ in range(random.randint(5, 10)):
+				self.particle_manager.add_particle(particle_collision_position + pygbase.utils.get_angled_vector(random.uniform(0, 360), random.uniform(0, 20)), self.fire_particle_settings)
+			for _ in range(random.randint(10, 15)):
+				offset = pygbase.utils.get_angled_vector(random.uniform(0, 360), random.uniform(0, 20))
+				self.particle_manager.add_particle(particle_collision_position + offset, self.smoke_particle_settings, initial_velocity=offset * random.uniform(2, 5))
+
+			particle_collision_circle_colliders.append(pygame.geometry.Circle(particle_collision_position, 10))
+
+		self.water_monster_group.update(delta, self.player.pos, particle_collision_circle_colliders)
 
 		self.player.update(delta)
 
@@ -41,12 +62,17 @@ class Game(pygbase.GameState, name="game"):
 		for water_draw_surface in self.water_draw_surfaces.values():
 			water_draw_surface.fill((0, 0, 0, 0))
 
-		self.level.draw(surface, self.camera, [self.player, *self.water_monster_group.get_monsters(self.player.pos)], 0)
+		near_water_monsters = self.water_monster_group.get_monsters(self.player.pos)
+		self.level.draw(surface, self.camera, [self.player, *near_water_monsters], 0)
 
 		self.particle_manager.draw(surface, self.camera)
+		# self.collision_particle_group.draw(surface, camera)
 
 		for water_draw_surface in self.water_draw_surfaces.values():
 			water_draw_surface.fill((255, 255, 255, self.water_alpha), special_flags=pygame.BLEND_RGBA_MIN)
 
 			surface.blit(water_draw_surface, (0, 0))
 		surface.blit(self.outline_draw_surface, (0, 0))
+
+		for water_monster in near_water_monsters:
+			water_monster.draw_ui(surface, self.camera)

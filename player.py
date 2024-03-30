@@ -1,6 +1,7 @@
 import random
 
 import pygame
+import pygame.geometry
 import pygbase
 from utils import get_sign
 
@@ -9,7 +10,7 @@ from particle_collider import CollisionParticleGroup
 
 
 class Player:
-	def __init__(self, pos: tuple, level: Level, camera: pygbase.Camera, particle_manager: pygbase.ParticleManager) -> None:
+	def __init__(self, pos: tuple, level: Level, camera: pygbase.Camera, particle_manager: pygbase.ParticleManager, collision_particle_group: CollisionParticleGroup) -> None:
 		self.gravity = pygbase.Common.get_value("gravity")
 		self.gravity_down_multiplier = 1.5
 
@@ -44,21 +45,22 @@ class Player:
 		self.camera = camera
 
 		self.particle_manager = particle_manager
+		self.collision_particle_group = collision_particle_group
+
 		self.particle_spawner_offset = (0, -50)
 		self.particle_spawner_towards_mouse_offset = 32
 		self.particle_spawner_pos = self.pos + self.particle_spawner_offset
 
 		self.fire_angle_deviation = 3
 		self.fire_velocity_range = (630, 800)
-		self.flamethrower_spawner = particle_manager.add_spawner(pygbase.PointSpawner(self.pos, 0.01, 1, False, "flamethrower", particle_manager, velocity_range=self.fire_velocity_range).link_pos(self.particle_spawner_pos))
+		self.flamethrower_spawner = particle_manager.add_spawner(pygbase.PointSpawner(self.pos, 0.01, 2, False, "flamethrower", particle_manager, velocity_range=self.fire_velocity_range).link_pos(self.particle_spawner_pos))
 		self.gun_tip_fire_spawner = particle_manager.add_spawner(pygbase.CircleSpawner(self.pos, 0.2, 3, 10, False, "fire", particle_manager, radial_velocity_range=(0, 20)).link_pos(self.particle_spawner_pos))
-		self.fire_particle_settings = pygbase.Common.get_particle_setting("fire")
-		self.smoke_particle_settings = pygbase.Common.get_particle_setting("smoke")
 
 		self.collision_particle_timer = pygbase.Timer(0.1, True, True)
-		self.collision_particle_group = CollisionParticleGroup("flamethrower", self.level.get_colliders())
 
 		self.level_colliders = self.level.get_colliders()
+
+		self.gun_angle = 0
 
 	def movement(self, delta):
 		self.turn_timer.tick(delta)
@@ -148,21 +150,14 @@ class Player:
 		self.rect.midbottom = self.pos
 
 	def update(self, delta: float):
+		self.gun_angle += 0.01
+
+		self.collision_particle_timer.tick(delta)
+
 		mouse_world_pos = self.camera.screen_to_world(pygame.mouse.get_pos())
 		angle_to_mouse = -pygbase.utils.get_angle_to(self.pos + self.particle_spawner_offset, mouse_world_pos)
 
 		self.animation.update(delta)
-
-		particle_collision_positions = self.collision_particle_group.update(delta)
-
-		for particle_collision_position in particle_collision_positions:
-			for _ in range(random.randint(5, 10)):
-				self.particle_manager.add_particle(particle_collision_position + pygbase.utils.get_angled_vector(random.uniform(0, 360), random.uniform(0, 20)), self.fire_particle_settings)
-			for _ in range(random.randint(10, 15)):
-				offset = pygbase.utils.get_angled_vector(random.uniform(0, 360), random.uniform(0, 20))
-				self.particle_manager.add_particle(particle_collision_position + offset, self.smoke_particle_settings, initial_velocity=offset * random.uniform(2, 5))
-
-		self.collision_particle_timer.tick(delta)
 
 		self.movement(delta)
 		if self.animation.current_state != "idle" and abs(self.velocity.x) < 2:
@@ -197,5 +192,3 @@ class Player:
 		flip_y = 90 < angle_to_mouse % 360 < 270
 
 		self.fire_gun.draw(surface, camera.world_to_screen(self.pos + self.particle_spawner_offset), angle=angle_to_mouse, flip=(False, flip_y), draw_pos="center")
-
-# self.collision_particle_group.draw(surface, camera)
