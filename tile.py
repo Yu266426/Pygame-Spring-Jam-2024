@@ -44,4 +44,4 @@ class Tile:
 		image = self.image.get_image(0).convert_alpha()
 		image.fill((90, 90, 90, 40), special_flags=pygame.BLEND_MULT)
 
-		surface.blit(image, (camera.world_to_screen(self.rect.topleft), self.rect.size))
+		surface.blit(image, camera.world_to_screen_rect(self.rect))

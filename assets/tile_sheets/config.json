@@ -1,6 +1,30 @@
 {
   "building_1": {
-    "rows": 4,
+    "rows": 6,
+    "columns": 6,
+    "tile_width": 16,
+    "tile_height": 16,
+    "scale": 0,
+    "rotatable": false
+  },
+  "building_2": {
+    "rows": 6,
+    "columns": 6,
+    "tile_width": 16,
+    "tile_height": 16,
+    "scale": 0,
+    "rotatable": false
+  },
+  "house_1": {
+    "rows": 6,
+    "columns": 6,
+    "tile_width": 16,
+    "tile_height": 16,
+    "scale": 0,
+    "rotatable": false
+  },
+  "large_trees": {
+    "rows": 6,
     "columns": 6,
     "tile_width": 16,
     "tile_height": 16,

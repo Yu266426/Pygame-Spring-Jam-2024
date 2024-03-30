@@ -6,28 +6,37 @@ from water_orb import WaterOrbGroup
 
 
 class WaterMonster:
-	def __init__(self, pos: tuple, level: Level):
+	def __init__(self, pos: tuple, level: Level, particle_manager: pygbase.ParticleManager):
 		self.gravity = pygbase.Common.get_value("gravity")
 		self.on_ground = False
 
 		self.max_speed_x = 100
 		self.max_speed_y = 100
 
-		self.acceleration = pygame.Vector2(10, 0)
+		self.acceleration = pygame.Vector2(0, 0)
 		self.velocity = pygame.Vector2()
 		self.pos = pygame.Vector2(pos)
 
-		self.rect = pygame.Rect((0, 0), (20, 60))
+		self.rect = pygame.Rect((0, 0), (20, 100))
 		self.rect.midbottom = self.pos
 
-		self.water_orb_group = WaterOrbGroup(pos, (0, -50), 15, (5, 30), ("blue", "light blue", "dark blue"), attraction_offset_range=((-10, 10), (-50, 10))).link_pos(self.pos)
+		self.water_orb_group = WaterOrbGroup(pos, (0, -80), 15, (5, 30), attraction_offset_range=((-10, 10), (-50, 50))).link_pos(self.pos)
 
 		self.level = level
 		self.level_colliders = self.level.get_colliders(0)
 
+		self.particle_spawner_offset = (0, -80)
+		self.particle_spawner_pos = self.pos + self.particle_spawner_offset
+		self.water_particle_spawner = particle_manager.add_spawner(
+			pygbase.CircleSpawner(self.pos, 0.1, 4, 30, True, "water", particle_manager, radial_velocity_range=(0, 100))
+		).link_pos(self.particle_spawner_pos)
+
+		self.outline_draw_surface: pygame.Surface = pygbase.Common.get_value("water_outline_surface")
+		self.water_draw_surfaces: dict[str | tuple, pygame.Surface] = pygbase.Common.get_value("water_surfaces")
+
 	def movement(self, delta):
 		self.velocity.x += self.acceleration.x * delta
-		self.velocity.x = min(max(self.velocity.x, -self.max_speed_x), self.max_speed_x)
+		self.velocity.x = pygame.math.clamp(self.velocity.x, -self.max_speed_x, self.max_speed_x)
 
 		self.pos.x += self.velocity.x * delta + 0.5 * self.acceleration.x * (delta ** 2)
 		self.rect.midbottom = self.pos
@@ -47,15 +56,12 @@ class WaterMonster:
 		# Upwards has less gravity than downwards
 		self.acceleration.y = self.gravity
 
-		input_jump = pygbase.InputManager.get_key_pressed(pygame.K_w)
-
 		self.velocity.y += self.acceleration.y * delta
-		self.velocity.y = min(max(self.velocity.y, -self.max_speed_y), self.max_speed_y)
+		self.velocity.y = pygame.math.clamp(self.velocity.y, -self.max_speed_y, self.max_speed_y)
 
 		self.pos.y += self.velocity.y * delta + 0.5 * self.acceleration.y * (delta ** 2)
 		self.rect.midbottom = self.pos
 
-		prev_on_ground = self.on_ground
 		self.on_ground = False
 		for rect in self.level_colliders:
 			if self.rect.colliderect(rect):
@@ -71,12 +77,14 @@ class WaterMonster:
 		self.rect.midbottom = self.pos
 
 	def update(self, delta: float):
-		self.water_orb_group.update(delta, self.velocity)
+		self.water_orb_group.update(delta)
 
 		self.movement(delta)
+		self.particle_spawner_pos.update(self.pos + self.particle_spawner_offset)
 
 	def draw(self, surface: pygame.Surface, camera: pygbase.Camera):
-		self.water_orb_group.draw(surface, camera)
+		pygbase.DebugDisplay.draw_rect(camera.world_to_screen_rect(self.rect), "yellow")
+		self.water_orb_group.draw(self.outline_draw_surface, self.water_draw_surfaces, camera)
 
 
 class WaterMonsterGroup:
@@ -89,6 +97,11 @@ class WaterMonsterGroup:
 		else:
 			return [water_monster for water_monster in self.water_monsters if water_monster.pos.distance_to(pos) < radius]
 
-	def update(self, delta):
+	def update(self, delta: float, pos: tuple | pygame.Vector2):
 		for water_monster in self.water_monsters:
-			water_monster.update(delta)
+			in_range = water_monster.pos.distance_to(pos) < 1000
+
+			if in_range:
+				water_monster.update(delta)
+
+			water_monster.water_particle_spawner.active = in_range
