@@ -102,6 +102,12 @@ class Level:
 			with open(file_path, "w") as level_file:
 				level_file.write(json.dumps(level_data))
 
+	def get_parallax_layer(self, layer: int):
+		if layer in self.parallax_layer_key:
+			return self.parallax_layer_key[layer]
+		else:
+			return 0
+
 	def get_colliders(self, layer: int = 0) -> tuple[pygame.Rect]:
 		return tuple(tile.rect for tile in self.tiles[layer].values())  # NoQA
 
@@ -109,10 +115,10 @@ class Level:
 		return int(pos[0] // self.tile_size[0]), int(pos[1] // self.tile_size[1])
 
 	def add_tile(self, tile_pos: tuple[int, int], layer: int, tile_name):
-		self.tiles.setdefault(layer, {})[tile_pos] = Tile(tile_pos, self.tile_size, self.parallax_layer_key[layer], self.parallax_amount).set_image(tile_name)
+		self.tiles.setdefault(layer, {})[tile_pos] = Tile(tile_pos, self.tile_size, self.get_parallax_layer(layer), self.parallax_amount).set_image(tile_name)
 
 	def add_sheet_tile(self, tile_pos: tuple[int, int], layer: int, sheet_name: str, index: int):
-		self.tiles.setdefault(layer, {})[tile_pos] = Tile(tile_pos, self.tile_size, self.parallax_layer_key[layer], self.parallax_amount).set_sprite_sheet(sheet_name, index)
+		self.tiles.setdefault(layer, {})[tile_pos] = Tile(tile_pos, self.tile_size, self.get_parallax_layer(layer), self.parallax_amount).set_sprite_sheet(sheet_name, index)
 
 	def remove_tile(self, tile_pos: tuple[int, int], layer: int):
 		if layer in self.tiles and tile_pos in self.tiles[layer]:
@@ -123,16 +129,13 @@ class Level:
 
 	def draw(self, surface: pygame.Surface, camera: pygbase.Camera, entities: list, entity_layer: int):
 		for layer_index, layer in sorted(self.tiles.items(), key=lambda e: e[0]):
-			parallax_key = self.parallax_layer_key[layer_index]
+			parallax_key = self.get_parallax_layer(layer_index)
 
 			x_parallax_amount = self.screen_size[0] * (1 + parallax_key * self.parallax_amount) / 2
 			y_parallax_amount = self.screen_size[1] * (1 + parallax_key * self.parallax_amount) / 2
 
-			parallax_camera = camera.copy()
-			parallax_camera.set_pos(parallax_camera.pos + (0, 0))
-
-			top_left = self.get_tile_pos(parallax_camera.screen_to_world((-x_parallax_amount, -y_parallax_amount)))
-			bottom_right = self.get_tile_pos(parallax_camera.screen_to_world((self.screen_size[0] + x_parallax_amount, self.screen_size[1] + y_parallax_amount)))
+			top_left = self.get_tile_pos(camera.screen_to_world((-x_parallax_amount, -y_parallax_amount)))
+			bottom_right = self.get_tile_pos(camera.screen_to_world((self.screen_size[0] + x_parallax_amount, self.screen_size[1] + y_parallax_amount)))
 
 			# print(top_left, bottom_right)
 
@@ -140,7 +143,7 @@ class Level:
 				for col in range(top_left[0], bottom_right[0]):
 					tile = layer.get((col, row))
 					if tile is not None:
-						tile.draw(surface, parallax_camera)
+						tile.draw(surface, camera)
 
 			# for tile in layer.values():
 			# 	tile.draw(surface, camera)

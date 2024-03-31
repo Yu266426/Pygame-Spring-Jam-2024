@@ -11,6 +11,9 @@ class Editor(pygbase.GameState, name="editor"):
 	def __init__(self):
 		super().__init__()
 
+		self.screen_size = pygbase.Common.get_value("screen_size")
+		self.tile_size = pygbase.Common.get_value("tile_size")
+
 		self.camera_controller = pygbase.CameraController((-400, -400))
 
 		self.level = Level()
@@ -214,6 +217,15 @@ class Editor(pygbase.GameState, name="editor"):
 	def get_current_tile_layer(self) -> int:
 		return int(self.tile_layer_text.text.text)
 
+	def get_mouse_tile_pos(self):
+		mouse_pos = pygame.Vector2(pygame.mouse.get_pos())
+		mouse_pos.x = (mouse_pos.x - self.screen_size[0] / 2) * (1 - self.level.get_parallax_layer(self.get_current_tile_layer()) * self.level.parallax_amount) + self.screen_size[0] / 2
+		mouse_pos.y = (mouse_pos.y - self.screen_size[1] / 2) * (1 - self.level.get_parallax_layer(self.get_current_tile_layer()) * self.level.parallax_amount) + self.screen_size[1] / 2
+
+		world_mouse_pos = self.camera_controller.camera.screen_to_world(mouse_pos)
+
+		return self.level.get_tile_pos(world_mouse_pos)
+
 	def update(self, delta: float):
 		self.ui.update(delta)
 		match (self.mode_selector.get_current_text()):
@@ -240,36 +252,29 @@ class Editor(pygbase.GameState, name="editor"):
 			self.camera_controller.update(delta)
 
 		if not self.ui.on_ui():
-			mouse_pos = self.camera_controller.camera.screen_to_world(pygame.mouse.get_pos())
-			mouse_tile_pos = self.level.get_tile_pos(mouse_pos)
-
 			match (self.mode_selector.get_current_text()):
 				case "Tile":
 					if pygbase.InputManager.get_mouse_pressed(0):
-						self.level.add_tile(mouse_tile_pos, self.get_current_tile_layer(), self.current_tile)
+						self.level.add_tile(self.get_mouse_tile_pos(), self.get_current_tile_layer(), self.current_tile)
 					if pygbase.InputManager.get_mouse_pressed(2):
-						self.level.remove_tile(mouse_tile_pos, self.get_current_tile_layer())
+						self.level.remove_tile(self.get_mouse_tile_pos(), self.get_current_tile_layer())
 				case "Sheet":
-					if pygbase.InputManager.get_key_pressed(pygame.K_SPACE) and self.prev_mouse_tile_pos != mouse_tile_pos:
-						offset = mouse_tile_pos[0] - self.prev_mouse_tile_pos[0], mouse_tile_pos[1] - self.prev_mouse_tile_pos[1]
-
-						self.current_sheet_index += offset[0] + offset[1] * self.sprite_sheets[self.current_sheet].n_cols
-
 					if pygbase.InputManager.get_mouse_pressed(0):
-						self.level.add_sheet_tile(mouse_tile_pos, self.get_current_tile_layer(), self.current_sheet, self.current_sheet_index)
-					if pygbase.InputManager.get_mouse_pressed(2):
-						self.level.remove_tile(mouse_tile_pos, self.get_current_tile_layer())
+						if pygbase.InputManager.get_key_pressed(pygame.K_SPACE) and self.prev_mouse_tile_pos != self.get_mouse_tile_pos():
+							offset = self.get_mouse_tile_pos()[0] - self.prev_mouse_tile_pos[0], self.get_mouse_tile_pos()[1] - self.prev_mouse_tile_pos[1]
 
-			self.prev_mouse_tile_pos = mouse_tile_pos
+							self.current_sheet_index += offset[0] + offset[1] * self.sprite_sheets[self.current_sheet].n_cols
+
+							self.current_sheet_index = max(min(self.current_sheet_index, self.sprite_sheets[self.current_sheet].n_cols * self.sprite_sheets[self.current_sheet].n_rows - 1), 0)
+
+						self.level.add_sheet_tile(self.get_mouse_tile_pos(), self.get_current_tile_layer(), self.current_sheet, self.current_sheet_index)
+					if pygbase.InputManager.get_mouse_pressed(2):
+						self.level.remove_tile(self.get_mouse_tile_pos(), self.get_current_tile_layer())
+
+			self.prev_mouse_tile_pos = self.get_mouse_tile_pos()
 
 	def draw(self, surface: pygame.Surface):
 		surface.fill("black")
-
-		# World Reference
-		center_point = self.camera_controller.camera.world_to_screen((0, 0))
-		pygame.draw.line(surface, "yellow", (0, center_point[1]), (800, center_point[1]))
-
-		pygame.draw.circle(surface, "yellow", center_point, 5)
 
 		# Level
 		match (self.mode_selector.get_current_text()):
@@ -288,21 +293,23 @@ class Editor(pygbase.GameState, name="editor"):
 			case _:
 				self.level.editor_draw(surface, self.camera_controller.camera)
 
-		mouse_pos = self.camera_controller.camera.screen_to_world(pygame.mouse.get_pos())
-		tile_size = pygbase.Common.get_value("tile_size")
-		mouse_tile_pos = self.level.get_tile_pos(mouse_pos)
-
 		if not self.ui.on_ui():
 			match (self.mode_selector.get_current_text()):
 				case "Tile":
 					if not pygbase.InputManager.get_mouse_pressed(2):
-						Tile(mouse_tile_pos, tile_size, 0, 0).set_image(self.current_tile).editor_draw_overlay(surface, self.camera_controller.camera)
+						Tile(self.get_mouse_tile_pos(), self.tile_size, self.level.get_parallax_layer(self.get_current_tile_layer()), self.level.parallax_amount).set_image(self.current_tile).editor_draw_overlay(surface, self.camera_controller.camera)
 					else:
-						pygame.draw.rect(surface, "red", (self.camera_controller.camera.world_to_screen((mouse_tile_pos[0] * tile_size[0], mouse_tile_pos[1] * tile_size[1])), tile_size), width=2)
+						pygame.draw.rect(surface, "red", (self.camera_controller.camera.world_to_screen((self.get_mouse_tile_pos()[0] * self.tile_size[0], self.get_mouse_tile_pos()[1] * self.tile_size[1])), self.tile_size), width=2)
 				case "Sheet":
 					if not pygbase.InputManager.get_mouse_pressed(2):
-						Tile(mouse_tile_pos, tile_size, 0, 0).set_sprite_sheet(self.current_sheet, self.current_sheet_index).editor_draw_overlay(surface, self.camera_controller.camera)
+						Tile(self.get_mouse_tile_pos(), self.tile_size, self.level.get_parallax_layer(self.get_current_tile_layer()), self.level.parallax_amount).set_sprite_sheet(self.current_sheet, self.current_sheet_index).editor_draw_overlay(surface, self.camera_controller.camera)
 					else:
-						pygame.draw.rect(surface, "red", (self.camera_controller.camera.world_to_screen((mouse_tile_pos[0] * tile_size[0], mouse_tile_pos[1] * tile_size[1])), tile_size), width=2)
+						pygame.draw.rect(surface, "red", (self.camera_controller.camera.world_to_screen((self.get_mouse_tile_pos()[0] * self.tile_size[0], self.get_mouse_tile_pos()[1] * self.tile_size[1])), self.tile_size), width=2)
+
+		# World Reference
+		center_point = self.camera_controller.camera.world_to_screen((0, 0))
+		pygame.draw.line(surface, "yellow", (0, center_point[1]), (800, center_point[1]))
+
+		pygame.draw.circle(surface, "yellow", center_point, 5)
 
 		self.ui.draw(surface)

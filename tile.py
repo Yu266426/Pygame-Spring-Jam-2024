@@ -22,7 +22,7 @@ class Tile:
 		self.original_image: pygbase.Image | None = None
 		self.image: pygame.Surface | None = None
 
-		self.rect: pygame.Rect = pygame.Rect(self.pos, tile_size)
+		self.rect: pygame.Rect = pygame.Rect(self.pos, (tile_size[0] * self.parallax_factor, tile_size[1] * self.parallax_factor))
 
 	def set_image(self, tile_name: str) -> "Tile":
 		self.from_sheet = False
@@ -33,7 +33,7 @@ class Tile:
 
 		image_cache = pygbase.Common.get_value("parallax_image_cache")
 		if (self.parallax_layer, tile_name) not in image_cache:
-			self.image = image_cache[(self.parallax_layer, tile_name)] = pygame.transform.scale_by(image, self.parallax_factor * 1.1)
+			self.image = image_cache[(self.parallax_layer, tile_name)] = pygame.transform.scale_by(image, self.parallax_factor * 1.06)
 		else:
 			self.image = image_cache[(self.parallax_layer, tile_name)]
 
@@ -49,7 +49,7 @@ class Tile:
 
 		image_cache = pygbase.Common.get_value("parallax_image_cache")
 		if (self.parallax_layer, sheet_name, index) not in image_cache:
-			self.image = image_cache[(self.parallax_layer, sheet_name, index)] = pygame.transform.scale_by(image, self.parallax_factor * 1.1)
+			self.image = image_cache[(self.parallax_layer, sheet_name, index)] = pygame.transform.scale_by(image, self.parallax_factor * 1.06)
 		else:
 			self.image = image_cache[(self.parallax_layer, sheet_name, index)]
 
@@ -67,13 +67,13 @@ class Tile:
 		surface.blit(self.image, self._get_parallax_pos(camera))
 
 	def editor_draw(self, surface: pygame.Surface, camera: pygbase.Camera):
-		self.original_image.draw(surface, camera.world_to_screen(self.pos))
+		surface.blit(self.image, self._get_parallax_pos(camera))
 
 	def editor_draw_overlay(self, surface: pygame.Surface, camera: pygbase.Camera):
-		self.original_image.draw(surface, camera.world_to_screen(self.pos), flags=pygame.BLEND_ADD)
+		surface.blit(self.image, self._get_parallax_pos(camera), special_flags=pygame.BLEND_ADD)
 
 	def editor_draw_dark(self, surface: pygame.Surface, camera: pygbase.Camera):
-		image = self.original_image.get_image().convert_alpha()
+		image = self.image.convert_alpha()
 		image.fill((90, 90, 90, 40), special_flags=pygame.BLEND_MULT)
 
-		surface.blit(image, camera.world_to_screen(self.pos))
+		surface.blit(image, self._get_parallax_pos(camera))
