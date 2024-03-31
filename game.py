@@ -60,7 +60,7 @@ class Game(pygbase.GameState, name="game"):
 
 			particle_collision_circle_colliders.append(pygame.geometry.Circle(particle_collision_position, 10))
 
-		self.water_monster_group.update(delta, self.player.pos, particle_collision_circle_colliders)
+		self.water_monster_group.update(delta, self.player.pos, particle_collision_circle_colliders, self.camera)
 
 		self.player.update(delta)
 

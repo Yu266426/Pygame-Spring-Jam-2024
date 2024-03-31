@@ -248,7 +248,7 @@ class WaterMonsterGroup:
 		else:
 			return [water_monster for water_monster in self.water_monsters if water_monster.pos.distance_to(pos) < radius]
 
-	def update(self, delta: float, pos: tuple | pygame.Vector2, particle_colliders: list[pygame.geometry.Circle]):
+	def update(self, delta: float, pos: tuple | pygame.Vector2, particle_colliders: list[pygame.geometry.Circle], camera: pygbase.Camera):
 		for water_monster in self.water_monsters:
 			in_range = water_monster.pos.distance_to(pos) < 1000
 
@@ -263,5 +263,6 @@ class WaterMonsterGroup:
 
 			if not water_monster.alive():
 				water_monster.kill()
+				camera.shake_screen(0.5)
 
 		self.water_monsters[:] = [water_monster for water_monster in self.water_monsters if water_monster.alive()]

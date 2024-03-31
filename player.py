@@ -211,4 +211,4 @@ class Player:
 	def draw_ui(self, surface: pygame.Surface, camera: pygbase.Camera):
 		self.temperature.draw(surface, camera)
 
-		print(self.health.health)
+		# print(self.health.health)

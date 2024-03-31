@@ -24,8 +24,8 @@
     "rotatable": false
   },
   "medium_trees": {
-    "rows": 6,
-    "columns": 6,
+    "rows": 4,
+    "columns": 12,
     "tile_width": 16,
     "tile_height": 16,
     "scale": 0,

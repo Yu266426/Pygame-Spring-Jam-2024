@@ -274,6 +274,8 @@ class Editor(pygbase.GameState, name="editor"):
 					self.level.layered_editor_draw(surface, self.camera_controller.camera, self.get_current_tile_layer())
 				else:
 					self.level.single_level_draw(surface, self.camera_controller.camera, self.get_current_tile_layer())
+			case "View":
+				self.level.draw(surface, self.camera_controller.camera, [], 0)
 			case _:
 				self.level.editor_draw(surface, self.camera_controller.camera)
 

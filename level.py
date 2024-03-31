@@ -17,6 +17,31 @@ class Level:
 
 		self.load()
 
+		self.parallax_amount = 0.1
+		self.screen_size = pygbase.Common.get_value("screen_size")
+
+		# {tile_layer: parallax_layer}
+		self.parallax_layer_key: dict[int, int] = {
+			0: 0,
+			-1: 0,
+			-2: -1,
+			-3: -2
+		}
+
+		# Validate layer keys
+		for layer in self.tiles.keys():
+			if layer not in self.parallax_layer_key.keys():
+				raise ValueError(f"Missing parallax key for tile layer {layer}")
+
+		self.parallax_layers: dict[int, pygame.Surface] = {}
+
+		for layer in self.parallax_layer_key.values():
+			if layer not in self.parallax_layers:
+				self.parallax_layers[layer] = pygame.Surface((
+					self.screen_size[0] * (1 - layer * self.parallax_amount),
+					self.screen_size[1] * (1 - layer * self.parallax_amount)
+				), flags=pygame.SRCALPHA)
+
 	def load(self):
 		file_path = ASSET_DIR / "levels" / f"{self.LEVEL_NAME}.json"
 
@@ -106,9 +131,21 @@ class Level:
 				del self.tiles[layer]
 
 	def draw(self, surface: pygame.Surface, camera: pygbase.Camera, entities: list, entity_layer: int):
+		for layer_index, layer in self.parallax_layers.items():
+			layer.fill((0, 0, 0, 0))
+
 		for layer_index, layer in sorted(self.tiles.items(), key=lambda e: e[0]):
+			parallax_camera = camera.copy()
+			parallax_camera.set_pos(parallax_camera.pos + (0, self.screen_size[1] * self.parallax_layer_key[layer_index] * self.parallax_amount / 2))
+
+			parallax_surface = self.parallax_layers[self.parallax_layer_key[layer_index]]
+			parallax_rect = parallax_surface.get_rect()
 			for tile in layer.values():
-				tile.draw(surface, camera)
+				if parallax_camera.world_to_screen_rect(tile.rect).colliderect(parallax_rect):
+					tile.draw(parallax_surface, parallax_camera)
+
+		for layer_index, layer in sorted(self.parallax_layers.items(), key=lambda e: e[0]):
+			surface.blit(pygame.transform.scale(layer, self.screen_size), (0, 0))
 
 			if layer_index == entity_layer:
 				for entity in entities:
