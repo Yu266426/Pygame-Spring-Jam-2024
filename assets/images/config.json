@@ -2,5 +2,13 @@
   "fire_gun": {
     "scale": 4,
     "rotatable": true
+  },
+  "thermometer": {
+    "scale": 4,
+    "rotatable": false
+  },
+  "thermometer_background": {
+    "scale": 4,
+    "rotatable": false
   }
 }

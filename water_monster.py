@@ -120,7 +120,7 @@ class WaterMonster:
 		self.outline_draw_surface: pygame.Surface = pygbase.Common.get_value("water_outline_surface")
 		self.water_draw_surfaces: dict[str | tuple, pygame.Surface] = pygbase.Common.get_value("water_surfaces")
 
-		self.temperature = Temperature(self.pos).link_pos(self.pos)
+		self.temperature = Temperature(self.pos, offset=(0, -self.rect.height * 1.2)).link_pos(self.pos)
 
 		self.ai = WaterMonsterAI(self.pos, self.temperature)
 

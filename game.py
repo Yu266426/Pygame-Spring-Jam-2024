@@ -6,8 +6,7 @@ import pygbase
 from level import Level
 from particle_collider import CollisionParticleGroup
 from player import Player
-from projectiles import ProjectileGroup, GarbageProjectile
-from utils import get_sign
+from projectiles import ProjectileGroup
 from water_monster import WaterMonster, WaterMonsterGroup
 
 
@@ -37,6 +36,8 @@ class Game(pygbase.GameState, name="game"):
 		self.player = Player(player_spawn_pos, self.level, self.camera, self.particle_manager, self.collision_particle_group)
 
 	def update(self, delta: float):
+		self.camera.tick(delta)
+
 		water_monster_colliders = self.water_monster_group.get_colliders(self.player.pos)
 		self.particle_manager.pass_dynamic_colliders(water_monster_colliders)
 		self.particle_manager.update(delta)
@@ -46,6 +47,8 @@ class Game(pygbase.GameState, name="game"):
 		for hit in hits:
 			if hit[0].colliderect(self.player.rect):
 				self.player.health.damage(hit[1])
+
+				self.camera.shake_screen(0.3)
 
 		particle_collision_circle_colliders = []
 		for particle_collision_position in particle_collision_positions:
@@ -62,18 +65,6 @@ class Game(pygbase.GameState, name="game"):
 		self.player.update(delta)
 
 		self.camera.lerp_to_target(self.player.pos - pygame.Vector2(pygbase.Common.get_value("screen_size")) / 2, 2 * delta)
-
-		mouse_pos = self.camera.screen_to_world(pygame.Vector2(pygame.mouse.get_pos()))
-		towards_player_vec = self.player.pos - mouse_pos
-
-		if pygbase.InputManager.get_key_pressed(pygame.K_p):
-			initial_x_velocity = towards_player_vec.normalize().x * 500
-			throw_vec = pygame.Vector2(
-				initial_x_velocity,
-				-((0.5 * 1600 * (towards_player_vec.x ** 2) / initial_x_velocity) - towards_player_vec.y * initial_x_velocity) / towards_player_vec.x
-			)
-
-			self.projectile_group.add_projectile(GarbageProjectile(mouse_pos, throw_vec, self.level.get_colliders()))
 
 	def draw(self, surface: pygame.Surface):
 		surface.fill((230, 240, 253))
