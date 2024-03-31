@@ -120,7 +120,8 @@ class WaterMonster:
 		self.outline_draw_surface: pygame.Surface = pygbase.Common.get_value("water_outline_surface")
 		self.water_draw_surfaces: dict[str | tuple, pygame.Surface] = pygbase.Common.get_value("water_surfaces")
 
-		self.temperature = Temperature(self.pos, offset=(0, -self.rect.height * 1.2)).link_pos(self.pos)
+		self.thermometer_pos: pygame.Vector2 = self.pos.copy()
+		self.temperature = Temperature(self.thermometer_pos, offset=(0, -80)).link_pos(self.thermometer_pos)
 
 		self.ai = WaterMonsterAI(self.pos, self.temperature)
 
@@ -209,6 +210,7 @@ class WaterMonster:
 
 		self.movement(delta)
 		self.particle_spawner_pos.update(self.pos + self.particle_spawner_offset)
+		self.thermometer_pos.update(self.water_orb_group.get_orb_average_pos())
 
 		self.attacks(player_pos)
 

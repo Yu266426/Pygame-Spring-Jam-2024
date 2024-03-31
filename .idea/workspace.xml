@@ -5,16 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5e716f3a-44ea-42ac-ba11-3585d3b1504c" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/art/thermometer.kra" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/art/thermometer_background.kra" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/images/thermometer.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/images/thermometer_background.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/images/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/assets/images/config.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/game.py" beforeDir="false" afterPath="$PROJECT_DIR$/game.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/player.py" beforeDir="false" afterPath="$PROJECT_DIR$/player.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/temperature.py" beforeDir="false" afterPath="$PROJECT_DIR$/temperature.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/water_monster.py" beforeDir="false" afterPath="$PROJECT_DIR$/water_monster.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/water_orb.py" beforeDir="false" afterPath="$PROJECT_DIR$/water_orb.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

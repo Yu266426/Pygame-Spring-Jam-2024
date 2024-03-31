@@ -76,11 +76,13 @@ class WaterOrb:
 
 class WaterOrbGroup:
 	def __init__(self, pos: tuple, offset: tuple, num_orbs: int, orb_size_range: tuple[float, float], attraction_offset_range: tuple[tuple, tuple] = ((0, 0), (0, 0))):
+
 		self.pos = pygame.Vector2(pos)
 		self.offset = offset
 
 		self.water_colors = pygbase.Common.get_value("water_monster_colors")
 
+		self.num_orbs = num_orbs
 		self.orb_size_range = orb_size_range
 		self.water_orbs: dict[str | tuple, list[WaterOrb]] = {}
 		for _ in range(num_orbs):
@@ -97,6 +99,15 @@ class WaterOrbGroup:
 	def link_pos(self, pos: pygame.Vector2) -> "WaterOrbGroup":
 		self.pos = pos
 		return self
+
+	def get_orb_average_pos(self):
+		pos_sum = pygame.Vector2()
+
+		for water_orbs in self.water_orbs.values():
+			for orb in water_orbs:
+				pos_sum += orb.pos
+
+		return pos_sum / self.num_orbs
 
 	def update(self, delta: float):
 		camera: pygbase.Camera = pygbase.Common.get_value("camera")
