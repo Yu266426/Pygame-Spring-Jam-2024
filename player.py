@@ -308,7 +308,7 @@ class Player:
 
 		pygbase.DebugDisplay.draw_circle(self.camera.world_to_screen(self.head_pos), 5, "blue")
 
-		self.breath_bubbles_spawner.active = self.pos.y > self.water_level
+		self.breath_bubbles_spawner.active = self.head_pos.y > self.water_level
 		if self.breath_bubbles_spawner.timer.done():
 			self.breath_bubbles_spawner.amount = random.randint(1, 3)
 			self.breath_bubbles_spawner.timer.set_cooldown(random.uniform(0.8, 2.2))
@@ -338,7 +338,7 @@ class Player:
 
 		self.particle_spawner_pos.update(self.pos + self.fire_gun_offset + pygbase.utils.get_angled_vector(angle_to_mouse, self.particle_spawner_towards_mouse_offset))
 
-		if self.prev_pos.y <= self.water_level < self.pos.y:  # Just entered water
+		if self.prev_pos.y <= self.water_level < self.pos.y or self.prev_pos.y > self.water_level >= self.pos.y:  # Just entered / exited water
 			for _ in range(random.randint(10, 30)):
 				offset = pygbase.utils.get_angled_vector(random.uniform(0, 360), 1)
 

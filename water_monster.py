@@ -8,6 +8,7 @@ import pygbase
 from level import Level
 from projectiles import ProjectileGroup, GarbageProjectile
 from temperature import Temperature
+from utils import get_sign
 from water_orb import WaterOrbGroup
 
 
@@ -24,7 +25,7 @@ class WaterMonsterStates(enum.Enum):
 
 
 class WaterMonsterAI:
-	def __init__(self, linked_pos: pygame.Vector2, temperature: Temperature, search_radius: float = 700, attack_radius: float = 320):
+	def __init__(self, linked_pos: pygame.Vector2, temperature: Temperature, search_radius: float = 700, attack_radius: float = 300):
 		self.pos = linked_pos
 		self.temperature = temperature
 
@@ -35,7 +36,9 @@ class WaterMonsterAI:
 
 		self.movement = pygame.Vector2()
 
-	def update(self, delta: float, player_pos: pygame.Vector2, level_colliders: tuple[pygame.Rect]):
+		self.camera = pygbase.Common.get_value("camera")
+
+	def update(self, delta: float, player_pos: pygame.Vector2, level_colliders: tuple[pygame.Rect], in_water: bool):
 		offset_vector = player_pos - self.pos
 		dist_to_player = offset_vector.length()
 		if offset_vector.length() != 0:
@@ -43,14 +46,14 @@ class WaterMonsterAI:
 
 		match self.current_state:
 			case WaterMonsterStates.SEARCH:
-				pygbase.DebugDisplay.draw_circle(pygbase.Common.get_value("camera").world_to_screen(self.pos), self.search_radius, "yellow")
+				pygbase.DebugDisplay.draw_circle(self.camera.world_to_screen(self.pos), self.search_radius, "yellow")
 
 				self.movement.update(0, 0)
 
 				if dist_to_player < self.search_radius:
 					self.current_state = WaterMonsterStates.MOVE_TOWARDS_PLAYER
 			case WaterMonsterStates.MOVE_TOWARDS_PLAYER:
-				pygbase.DebugDisplay.draw_circle(pygbase.Common.get_value("camera").world_to_screen(self.pos), self.attack_radius, "red")
+				pygbase.DebugDisplay.draw_circle(self.camera.world_to_screen(self.pos), self.attack_radius, "red")
 
 				self.movement.x = offset_vector.x
 
@@ -64,14 +67,20 @@ class WaterMonsterAI:
 				if dist_to_player > self.attack_radius:
 					self.current_state = WaterMonsterStates.SEARCH
 
+		if in_water:
+			self.movement.y = get_sign(offset_vector.y)
+		else:
+			self.movement.y = 0
+
+		has_collided = False
 		in_front_collider = pygame.Rect(self.pos.x + self.movement.x * 20, self.pos.y - 20, 5, 10)
-		self.movement.y = 0
 		for level_collider in level_colliders:
 			if in_front_collider.colliderect(level_collider):
-				self.movement.y = -1
+				has_collided = True
+				self.movement.y = -5000 if in_water else -1
 				break
 
-		pygbase.DebugDisplay.draw_rect(pygbase.Common.get_value("camera").world_to_screen_rect(in_front_collider), "blue" if self.movement.y == 0 else "red")
+		pygbase.DebugDisplay.draw_rect(self.camera.world_to_screen_rect(in_front_collider), "blue" if not has_collided else "red")
 
 	def get_movement(self) -> pygame.Vector2:
 		return self.movement
@@ -87,6 +96,7 @@ class WaterMonsterAI:
 class WaterMonster:
 	def __init__(self, pos: tuple, level: Level, particle_manager: pygbase.ParticleManager, projectile_group: ProjectileGroup):
 		self.gravity = pygbase.Common.get_value("gravity")
+		self.water_level = pygbase.Common.get_value("water_level")
 		self.on_ground = False
 
 		self.acceleration_speed = 200
@@ -180,6 +190,55 @@ class WaterMonster:
 
 		self.rect.midbottom = self.pos
 
+	def water_movement(self, delta):
+		movement = self.ai.get_movement()
+
+		if movement.x != 0:
+			self.acceleration.x = movement.x * self.acceleration_speed
+		else:
+			self.acceleration.x = -self.velocity.x * self.x_damping
+
+		self.velocity.x += self.acceleration.x * delta
+		self.velocity.x = pygame.math.clamp(self.velocity.x, -self.max_speed_x, self.max_speed_x)
+
+		self.pos.x += self.velocity.x * delta + 0.5 * self.acceleration.x * (delta ** 2)
+		self.rect.midbottom = self.pos
+
+		for rect in self.level_colliders:
+			if self.rect.colliderect(rect):
+				if self.velocity.x > 0:
+					self.pos.x = rect.left - self.rect.width / 2
+					self.velocity.x = 0
+				elif self.velocity.x < 0:
+					self.pos.x = rect.right + self.rect.width / 2
+					self.velocity.x = 0
+
+		self.rect.midbottom = self.pos
+
+		# Y movement
+		if movement.y != 0:
+			self.acceleration.y = movement.y * self.acceleration_speed
+		else:
+			self.acceleration.y = -self.velocity.y * self.x_damping
+
+		self.velocity.y += self.acceleration.y * delta
+		self.velocity.y = pygame.math.clamp(self.velocity.y, -self.max_speed_y, self.max_speed_x)
+
+		self.pos.y += self.velocity.y * delta + 0.5 * self.acceleration.y * (delta ** 2)
+		self.rect.midbottom = self.pos
+
+		for rect in self.level_colliders:
+			if self.rect.colliderect(rect):
+				if self.velocity.y > 0:
+					self.pos.y = rect.top
+					self.velocity.y = 0
+
+				elif self.velocity.y < 0:
+					self.pos.y = rect.bottom + self.rect.height
+					self.velocity.y = 0
+
+		self.rect.midbottom = self.pos
+
 	def attacks(self, player_pos: tuple | pygame.Vector2):
 		attack = self.ai.get_attack()
 
@@ -199,14 +258,17 @@ class WaterMonster:
 					self.garbage_throw_timer.start()
 
 	def update(self, delta: float, player_pos: pygame.Vector2):
-		self.ai.update(delta, player_pos, self.level_colliders)
+		self.ai.update(delta, player_pos, self.level_colliders, self.pos.y > self.water_level)
 
 		self.temperature.tick(delta)
 		self.garbage_throw_timer.tick(delta)
 
 		self.water_orb_group.update(delta)
 
-		self.movement(delta)
+		if self.pos.y > self.water_level:
+			self.water_movement(delta)
+		else:
+			self.movement(delta)
 		self.water_orb_average_pos.update(self.water_orb_group.get_orb_average_pos())
 
 		self.attacks(player_pos)

@@ -5,22 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5e716f3a-44ea-42ac-ba11-3585d3b1504c" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/art/water.kra" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/tile_sheets/water.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/art/.water_1.kra-autosave.kra" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/art/water_1.kra" beforeDir="false" afterPath="$PROJECT_DIR$/art/.player_swim.kra-autosave.kra" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/levels/level.json" beforeDir="false" afterPath="$PROJECT_DIR$/assets/levels/level.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/tile_sheets/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/assets/tile_sheets/config.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/tiles/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/assets/tiles/config.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/tiles/water_1.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor.py" beforeDir="false" afterPath="$PROJECT_DIR$/editor.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/game.py" beforeDir="false" afterPath="$PROJECT_DIR$/game.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/level.py" beforeDir="false" afterPath="$PROJECT_DIR$/level.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/player.py" beforeDir="false" afterPath="$PROJECT_DIR$/player.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/projectiles.py" beforeDir="false" afterPath="$PROJECT_DIR$/projectiles.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tile.py" beforeDir="false" afterPath="$PROJECT_DIR$/tile.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/water_monster.py" beforeDir="false" afterPath="$PROJECT_DIR$/water_monster.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -52,19 +40,19 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ASKED_ADD_EXTERNAL_FILES": "true",
-    "Python.Editor.executor": "Run",
-    "Python.Game.executor": "Run",
-    "Python.main.executor": "Run",
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "main",
-    "last_opened_file_path": "/Users/tigerz/Documents/Programming/Github/Pygame-Spring-Jam-2024/assets/sprite_sheets",
-    "settings.editor.selected.configurable": "preferences.lookFeel"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
+    &quot;Python.Editor.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Game.executor&quot;: &quot;Run&quot;,
+    &quot;Python.main.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/tigerz/Documents/Programming/Github/Pygame-Spring-Jam-2024/assets/sprite_sheets&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.lookFeel&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/assets/sprite_sheets" />

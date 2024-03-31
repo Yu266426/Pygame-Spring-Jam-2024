@@ -7,13 +7,16 @@ from boss import HeartOfTheSeaBoss
 from level import Level
 from particle_collider import CollisionParticleGroup
 from player import Player
-from projectiles import ProjectileGroup, GarbageProjectile
+from projectiles import ProjectileGroup
 from water_monster import WaterMonster, WaterMonsterGroup
 
 
 class Game(pygbase.GameState, name="game"):
 	def __init__(self):
 		super().__init__()
+
+		self.camera = pygbase.Camera()
+		pygbase.Common.set_value("camera", self.camera)
 
 		self.water_alpha = pygbase.Common.get_value("water_alpha")
 		self.outline_draw_surface: pygame.Surface = pygbase.Common.get_value("water_outline_surface")
@@ -40,8 +43,7 @@ class Game(pygbase.GameState, name="game"):
 		self.boiling_water_particle_settings = pygbase.Common.get_particle_setting("boiling_water")
 		self.water_vapour_particle_settings = pygbase.Common.get_particle_setting("water_vapour")
 
-		self.camera = pygbase.Camera(self.level.player_spawn_pos - pygame.Vector2(pygbase.Common.get_value("screen_size")) / 2)
-		pygbase.Common.set_value("camera", self.camera)
+		self.camera.set_pos(self.level.player_spawn_pos - pygame.Vector2(pygbase.Common.get_value("screen_size")) / 2)
 		self.player = Player(self.level.player_spawn_pos, self.level, self.camera, self.particle_manager, self.in_water_particle_manager, self.collision_particle_group)
 
 		self.heart_of_the_sea = HeartOfTheSeaBoss(self.level.heart_of_the_sea_pos)
