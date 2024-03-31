@@ -130,7 +130,7 @@ class Level:
 			return 0
 
 	def get_colliders(self, layer: int = 0) -> tuple[pygame.Rect]:
-		return tuple(tile._rect for tile in self.tiles[layer].values())  # NoQA
+		return tuple(tile.rect for tile in self.tiles[layer].values())  # NoQA
 
 	def get_tile_pos(self, pos: tuple):
 		return int(pos[0] // self.tile_size[0]), int(pos[1] // self.tile_size[1])

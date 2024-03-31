@@ -7,7 +7,7 @@ from boss import HeartOfTheSeaBoss
 from level import Level
 from particle_collider import CollisionParticleGroup
 from player import Player
-from projectiles import ProjectileGroup
+from projectiles import ProjectileGroup, GarbageProjectile
 from water_monster import WaterMonster, WaterMonsterGroup
 
 
@@ -56,7 +56,7 @@ class Game(pygbase.GameState, name="game"):
 		self.in_water_particle_manager.update(delta)
 		particle_collision_positions = self.collision_particle_group.update(delta, water_monster_colliders)
 
-		hits = self.projectile_group.update(delta, [self.player.ground_rect])
+		hits = self.projectile_group.update(delta, [self.player.rect])
 		for hit in hits:
 			if hit[0].colliderect(self.player.ground_rect):
 				self.player.health.damage(hit[1])
@@ -67,8 +67,6 @@ class Game(pygbase.GameState, name="game"):
 		for particle_collision_info in particle_collision_positions:
 			particle_collision_position = particle_collision_info[0]
 			particle_setting_name = particle_collision_info[1]
-
-			print(particle_setting_name)
 
 			if particle_setting_name == "flamethrower":
 				for _ in range(random.randint(5, 10)):
@@ -83,7 +81,7 @@ class Game(pygbase.GameState, name="game"):
 
 			particle_collision_circle_colliders.append(pygame.geometry.Circle(particle_collision_position, 10))
 
-		self.water_monster_group.update(delta, self.player.pos, particle_collision_circle_colliders, self.camera)
+		self.water_monster_group.update(delta, self.player.pos + (0, -10 if self.player.is_swimming else -80), particle_collision_circle_colliders, self.camera)
 
 		self.player.update(delta)
 

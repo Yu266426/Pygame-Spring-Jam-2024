@@ -25,10 +25,14 @@ class Tile:
 		self.image: pygame.Surface | None = None
 
 		self._rect: pygame.Rect = pygame.Rect(self.pos, (tile_size[0] * self.parallax_factor, tile_size[1] * self.parallax_factor))
+		self.collider_rect: pygame.Rect | None = None
 
 	@property
 	def rect(self):
-		return self._rect
+		if self.collider_rect is None:
+			return self._rect
+		else:
+			return self.collider_rect
 
 	def set_image(self, tile_name: str) -> "Tile":
 		self.from_sheet = False
@@ -42,6 +46,8 @@ class Tile:
 			self.image = image_cache[(self.parallax_layer, tile_name)] = pygame.transform.scale_by(image, self.parallax_factor * self.buffer_factor)
 		else:
 			self.image = image_cache[(self.parallax_layer, tile_name)]
+
+		# Custom tiles
 
 		return self
 
@@ -58,6 +64,10 @@ class Tile:
 			self.image = image_cache[(self.parallax_layer, sheet_name, index)] = pygame.transform.scale_by(image, self.parallax_factor * self.buffer_factor)
 		else:
 			self.image = image_cache[(self.parallax_layer, sheet_name, index)]
+
+		# Custom tiles
+		if sheet_name == "water" and index < 3:
+			self.collider_rect = pygame.Rect(self.pos.x, self.pos.y + self.rect.height * 0.2, self.rect.width, self.rect.height * 0.8)
 
 		return self
 

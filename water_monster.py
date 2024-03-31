@@ -183,7 +183,7 @@ class WaterMonster:
 	def attacks(self, player_pos: tuple | pygame.Vector2):
 		attack = self.ai.get_attack()
 
-		towards_player_vec = (player_pos + (0, -80)) - self.water_orb_average_pos
+		towards_player_vec = player_pos - self.water_orb_average_pos
 
 		match attack:
 			case WaterMonsterAttacks.GARBAGE_THROW:

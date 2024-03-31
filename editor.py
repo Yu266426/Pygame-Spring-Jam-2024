@@ -221,8 +221,9 @@ class Editor(pygbase.GameState, name="editor"):
 		self.hide_other_layers = not self.hide_other_layers
 
 	def sheet_tile_selection_button_callback(self, sprite_sheet_name: str, index: int):
-		self.current_sheet = sprite_sheet_name
-		self.current_sheet_index = index
+		if self.ui.on_ui():
+			self.current_sheet = sprite_sheet_name
+			self.current_sheet_index = index
 
 	def set_active_sheet_tiles(self, all_false: bool = False):
 		for tile_selector_name, tile_selector in self.sprite_sheet_tile_frames.items():

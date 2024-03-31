@@ -9,7 +9,7 @@ from level import Level
 
 
 class Projectile:
-	def __init__(self, pos: tuple | pygame.Vector2, initial_velocity: tuple | pygame.Vector2, radius: float, damage: int, despawn_time: float = 3.0, bounce: tuple[float, float] = (0.5, 0.1)):
+	def __init__(self, pos: tuple | pygame.Vector2, initial_velocity: tuple | pygame.Vector2, radius: float, damage: int, despawn_time: float = 3.0, bounce: tuple[float, float] = (0.5, 0.2)):
 		self.gravity = pygbase.Common.get_value("gravity")
 
 		self.max_speed_x = 10000
@@ -35,6 +35,8 @@ class Projectile:
 	def movement(self, delta, colliders: list[pygame.Rect]):
 		if self.on_ground:
 			self.acceleration.x = -self.velocity.x * self.ground_damping
+		else:
+			self.acceleration.x = 0
 
 		self.velocity.x += self.acceleration.x * delta
 		self.velocity.x = pygame.math.clamp(self.velocity.x, -self.max_speed_x, self.max_speed_x)

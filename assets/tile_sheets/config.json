@@ -30,5 +30,13 @@
     "tile_height": 16,
     "scale": 0,
     "rotatable": false
+  },
+  "water": {
+    "rows": 5,
+    "columns": 3,
+    "tile_width": 16,
+    "tile_height": 16,
+    "scale": 0,
+    "rotatable": false
   }
 }

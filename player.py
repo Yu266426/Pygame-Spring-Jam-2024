@@ -69,11 +69,14 @@ class Player:
 		self.in_water_particle_manager = in_water_particle_manager
 		self.collision_particle_group = collision_particle_group
 
+		self.water_splash_particle_settings = pygbase.Common.get_particle_setting("water_splash")
+
 		self.fire_gun_offset_land = (0, -60)
 		self.fire_gun_offset_water = (0, -20)
 		self.fire_gun_offset = self.fire_gun_offset_land
 		self.particle_spawner_towards_mouse_offset = 32
 		self.particle_spawner_pos = self.pos + self.fire_gun_offset
+		self.head_pos = self.pos.copy()
 
 		self.fire_angle_deviation = 3
 		self.fire_velocity_range = (720, 830)
@@ -81,6 +84,7 @@ class Player:
 		self.boiling_water_spawner = in_water_particle_manager.add_spawner(pygbase.PointSpawner(self.pos, 0.01, 2, False, "boiling_water", in_water_particle_manager, velocity_range=self.fire_velocity_range).link_pos(self.particle_spawner_pos))
 		self.gun_tip_fire_spawner = on_land_particle_manager.add_spawner(pygbase.CircleSpawner(self.pos, 0.2, 3, 10, False, "fire", on_land_particle_manager, radial_velocity_range=(0, 20)).link_pos(self.particle_spawner_pos))
 		self.gun_tip_water_spawner = in_water_particle_manager.add_spawner(pygbase.CircleSpawner(self.pos, 0.2, 3, 10, False, "water_vapour", in_water_particle_manager, radial_velocity_range=(0, 20)).link_pos(self.particle_spawner_pos))
+		self.breath_bubbles_spawner = in_water_particle_manager.add_spawner(pygbase.CircleSpawner(self.pos, 2, 5, 10, False, "bubble", in_water_particle_manager)).link_pos(self.head_pos)
 
 		self.collision_particle_timer = pygbase.Timer(0.1, True, True)
 
@@ -277,6 +281,7 @@ class Player:
 
 		self.animation.update(delta)
 		self.is_swimming = self.animation.current_state == "swim"
+
 		if self.is_swimming:
 			self.fire_gun_offset = self.fire_gun_offset_water
 			self.temperature.offset = self.thermometer_offset_water
@@ -289,6 +294,24 @@ class Player:
 
 		self.input.x = pygbase.InputManager.get_key_pressed(pygame.K_d) - pygbase.InputManager.get_key_pressed(pygame.K_a)
 		self.input.y = pygbase.InputManager.get_key_pressed(pygame.K_s) - pygbase.InputManager.get_key_pressed(pygame.K_w)
+
+		if self.is_swimming:
+			self.head_pos.update(
+				self.pos.x + 30 * (-1 if self.flip_x else 1),
+				self.pos.y - 20
+			)
+		else:
+			self.head_pos.update(
+				self.pos.x,
+				self.pos.y - 80
+			)
+
+		pygbase.DebugDisplay.draw_circle(self.camera.world_to_screen(self.head_pos), 5, "blue")
+
+		self.breath_bubbles_spawner.active = self.pos.y > self.water_level
+		if self.breath_bubbles_spawner.timer.done():
+			self.breath_bubbles_spawner.amount = random.randint(1, 3)
+			self.breath_bubbles_spawner.timer.set_cooldown(random.uniform(0.8, 2.2))
 
 		if self.pos.y <= self.water_level:
 			self.ground_movement(delta)
@@ -314,6 +337,16 @@ class Player:
 		self.water_rect.midbottom = self.pos
 
 		self.particle_spawner_pos.update(self.pos + self.fire_gun_offset + pygbase.utils.get_angled_vector(angle_to_mouse, self.particle_spawner_towards_mouse_offset))
+
+		if self.prev_pos.y <= self.water_level < self.pos.y:  # Just entered water
+			for _ in range(random.randint(10, 30)):
+				offset = pygbase.utils.get_angled_vector(random.uniform(0, 360), 1)
+
+				self.in_water_particle_manager.add_particle(
+					self.pos + offset * random.uniform(0, 60),
+					self.water_splash_particle_settings,
+					(offset.x * 100, abs(offset.y) * -500)
+				)
 
 		if self.prev_pos.y + self.fire_gun_offset[1] <= self.water_level < self.pos.y + self.fire_gun_offset[1]:
 			self.gun_land_to_water = True

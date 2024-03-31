@@ -73,12 +73,32 @@ if __name__ == '__main__':
 		((0.0, 0.1), (0.0, 0.4))
 	)
 	pygbase.add_particle_setting(
+		"water_splash",
+		["light blue"],
+		(6, 12),
+		(5, 6),
+		(0.2, 1),
+		(0, 10),
+		True,
+		((0.0, 0.1), (0.0, 0.4))
+	)
+	pygbase.add_particle_setting(
 		"boiling_water",
 		["light blue"],
 		(6, 12),
 		(6, 8),
 		(2, 2),
 		(0, 0),
+		True,
+		((0.0, 0.1), (0.0, 0.1))
+	)
+	pygbase.add_particle_setting(
+		"bubble",
+		["light blue"],
+		(9, 15),
+		(2, 4),
+		(0.2, 1),
+		(0, -2),
 		True,
 		((0.0, 0.1), (0.0, 0.1))
 	)
