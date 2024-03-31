@@ -36,12 +36,14 @@ class Editor(pygbase.GameState, name="editor"):
 		self.create_tile_edit_ui()
 
 		self.sheet_tile_editing_ui = None
-		self.sprite_sheets = pygbase.ResourceManager.get_resources_of_type("tile_sheets")
+		self.sprite_sheets: dict[str, pygbase.SpriteSheet] = pygbase.ResourceManager.get_resources_of_type("tile_sheets")
 		self.sprite_sheet_tile_frames = None
 		self.sheet_selector = None
-		self.current_sheet = None
-		self.current_sheet_index = 0
+		self.current_sheet: str | None = None
+		self.current_sheet_index: int | None = 0
 		self.create_sheet_tile_edit_ui()
+
+		self.prev_mouse_tile_pos = (0, 0)
 
 	def create_tile_layer_ui(self):
 		self.tile_layer_ui = self.ui.add_frame(pygbase.Frame(
@@ -248,10 +250,17 @@ class Editor(pygbase.GameState, name="editor"):
 					if pygbase.InputManager.get_mouse_pressed(2):
 						self.level.remove_tile(mouse_tile_pos, self.get_current_tile_layer())
 				case "Sheet":
+					if pygbase.InputManager.get_key_pressed(pygame.K_SPACE) and self.prev_mouse_tile_pos != mouse_tile_pos:
+						offset = mouse_tile_pos[0] - self.prev_mouse_tile_pos[0], mouse_tile_pos[1] - self.prev_mouse_tile_pos[1]
+
+						self.current_sheet_index += offset[0] + offset[1] * self.sprite_sheets[self.current_sheet].n_cols
+
 					if pygbase.InputManager.get_mouse_pressed(0):
 						self.level.add_sheet_tile(mouse_tile_pos, self.get_current_tile_layer(), self.current_sheet, self.current_sheet_index)
 					if pygbase.InputManager.get_mouse_pressed(2):
 						self.level.remove_tile(mouse_tile_pos, self.get_current_tile_layer())
+
+			self.prev_mouse_tile_pos = mouse_tile_pos
 
 	def draw(self, surface: pygame.Surface):
 		surface.fill("black")
@@ -287,12 +296,12 @@ class Editor(pygbase.GameState, name="editor"):
 			match (self.mode_selector.get_current_text()):
 				case "Tile":
 					if not pygbase.InputManager.get_mouse_pressed(2):
-						Tile(mouse_tile_pos, tile_size).set_image(self.current_tile).editor_draw(surface, self.camera_controller.camera)
+						Tile(mouse_tile_pos, tile_size, 0, 0).set_image(self.current_tile).editor_draw_overlay(surface, self.camera_controller.camera)
 					else:
 						pygame.draw.rect(surface, "red", (self.camera_controller.camera.world_to_screen((mouse_tile_pos[0] * tile_size[0], mouse_tile_pos[1] * tile_size[1])), tile_size), width=2)
 				case "Sheet":
 					if not pygbase.InputManager.get_mouse_pressed(2):
-						Tile(mouse_tile_pos, tile_size).set_sprite_sheet(self.current_sheet, self.current_sheet_index).editor_draw(surface, self.camera_controller.camera)
+						Tile(mouse_tile_pos, tile_size, 0, 0).set_sprite_sheet(self.current_sheet, self.current_sheet_index).editor_draw_overlay(surface, self.camera_controller.camera)
 					else:
 						pygame.draw.rect(surface, "red", (self.camera_controller.camera.world_to_screen((mouse_tile_pos[0] * tile_size[0], mouse_tile_pos[1] * tile_size[1])), tile_size), width=2)
 

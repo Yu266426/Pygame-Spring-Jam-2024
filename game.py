@@ -26,7 +26,7 @@ class Game(pygbase.GameState, name="game"):
 		for i in range(1000):
 			self.water_monster_group.water_monsters.append(WaterMonster((500 + 200 * i, 0), self.level, self.particle_manager, self.projectile_group))
 
-		self.collision_particle_group = CollisionParticleGroup("flamethrower", self.level.get_colliders())
+		self.collision_particle_group = CollisionParticleGroup("flamethrower", {tile_pos: tile.rect for tile_pos, tile in self.level.tiles[0].items()})
 		self.fire_particle_settings = pygbase.Common.get_particle_setting("fire")
 		self.smoke_particle_settings = pygbase.Common.get_particle_setting("smoke")
 
@@ -67,7 +67,7 @@ class Game(pygbase.GameState, name="game"):
 		self.camera.lerp_to_target(self.player.pos - pygame.Vector2(pygbase.Common.get_value("screen_size")) / 2, 2 * delta)
 
 	def draw(self, surface: pygame.Surface):
-		surface.fill((230, 240, 253))
+		surface.fill((150, 180, 223))
 		self.outline_draw_surface.fill((0, 0, 0, 0))
 		for water_draw_surface in self.water_draw_surfaces.values():
 			water_draw_surface.fill((0, 0, 0, 0))

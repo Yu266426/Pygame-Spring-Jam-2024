@@ -73,7 +73,8 @@ if __name__ == '__main__':
 		((0.0, 0.1), (0.0, 0.4))
 	)
 
-	pygbase.Common.set_value("tile_size", (16 * 4, 16 * 4))
+	tile_scale = 4
+	pygbase.Common.set_value("tile_size", (16 * tile_scale, 16 * tile_scale))
 	pygbase.Common.set_value("gravity", 1600)
 
 	water_monster_colors = ("blue", "light blue", "dark blue")
@@ -81,6 +82,8 @@ if __name__ == '__main__':
 	pygbase.Common.set_value("water_alpha", 100)
 
 	pygbase.Common.set_value("water_outline_surface", pygame.Surface(pygbase.Common.get_value("screen_size"), flags=pygame.SRCALPHA))
+
+	pygbase.Common.set_value("parallax_image_cache", {})
 
 	water_draw_surfaces: dict[str | tuple, pygame.Surface] = {}
 	for color in water_monster_colors:
@@ -90,10 +93,10 @@ if __name__ == '__main__':
 
 	pygbase.EventManager.add_handler("all", pygame.KEYDOWN, lambda e: pygbase.EventManager.post_event(pygame.QUIT) if e.key == pygame.K_ESCAPE else None)
 
-	pygbase.add_image_resource("tiles", 0, str(ASSET_DIR / "tiles"), default_scale=4)
-	pygbase.add_sprite_sheet_resource("tile_sheets", 1, str(ASSET_DIR / "tile_sheets"), default_scale=4)
-	pygbase.add_sprite_sheet_resource("sprite_sheets", 2, str(ASSET_DIR / "sprite_sheets"), default_scale=4)
-	pygbase.add_image_resource("images", 3, str(ASSET_DIR / "images"), default_scale=4)
+	pygbase.add_image_resource("tiles", 0, str(ASSET_DIR / "tiles"), default_scale=tile_scale)
+	pygbase.add_sprite_sheet_resource("tile_sheets", 1, str(ASSET_DIR / "tile_sheets"), default_scale=tile_scale)
+	pygbase.add_sprite_sheet_resource("sprite_sheets", 2, str(ASSET_DIR / "sprite_sheets"), default_scale=tile_scale)
+	pygbase.add_image_resource("images", 3, str(ASSET_DIR / "images"), default_scale=tile_scale)
 	pygbase.add_image_resource("ui", 4, str(ASSET_DIR / "ui"))
 
 	if DO_PROFILE:
@@ -103,7 +106,7 @@ if __name__ == '__main__':
 		pygbase.App(Game).run()
 		profiler.disable()
 
-		profiler.dump_stats("stats.prof")
+		profiler.dump_stats("stats3.prof")
 	else:
 		if "-game" in cl_args:
 			pygbase.App(Game).run()

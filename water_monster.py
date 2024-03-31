@@ -101,7 +101,7 @@ class WaterMonster:
 		self.velocity = pygame.Vector2()
 		self.pos = pygame.Vector2(pos)
 
-		self.rect = pygame.Rect((0, 0), (20, 100))
+		self.rect = pygame.Rect((0, 0), (20, 120))
 		self.rect.midbottom = self.pos
 
 		self.water_orb_group = WaterOrbGroup(pos, (0, -80), random.randint(8, 15), (5, 30), attraction_offset_range=((-10, 10), (-50, 50))).link_pos(self.pos)
@@ -255,9 +255,10 @@ class WaterMonsterGroup:
 			if in_range:
 				water_monster.update(delta, pos)
 
-				for particle_collider in particle_colliders:
+				for particle_collider in particle_colliders[:]:
 					if particle_collider.colliderect(water_monster.rect):
 						water_monster.temperature.heat(10)
+						particle_colliders.remove(particle_collider)
 
 			water_monster.water_particle_spawner.active = in_range
 
