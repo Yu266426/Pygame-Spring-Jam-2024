@@ -84,7 +84,7 @@ class CollisionParticleGroup:
 		self.particles.append(CollisionParticle(pos, self.particle_settings, initial_velocity))
 
 	def update(self, delta: float, dynamic_colliders: list[pygame.Rect]):
-		collision_positions = []
+		collision_positions: list[tuple[pygame.Vector2, str]] = []
 
 		for particle in self.particles:
 			tile_pos = int(particle.pos.x // self.tile_size[0]), int(particle.pos.y // self.tile_size[1])
@@ -100,7 +100,7 @@ class CollisionParticleGroup:
 
 			collision_pos = particle.update(delta, [*dynamic_colliders, *surrounding_colliders])
 			if collision_pos is not None:
-				collision_positions.append(collision_pos)
+				collision_positions.append((collision_pos, self.particle_settings[pygbase.common.ParticleOptions.NAME]))
 
 		self.particles[:] = [particle for particle in self.particles if particle.alive()]
 

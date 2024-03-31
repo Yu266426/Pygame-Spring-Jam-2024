@@ -13,7 +13,9 @@ from particle_collider import CollisionParticleGroup
 
 
 class Player:
-	def __init__(self, pos: tuple, level: Level, camera: pygbase.Camera, particle_manager: pygbase.ParticleManager, collision_particle_group: CollisionParticleGroup) -> None:
+	def __init__(self, pos: tuple, level: Level, camera: pygbase.Camera, on_land_particle_manager: pygbase.ParticleManager, in_water_particle_manager: pygbase.ParticleManager, collision_particle_group: CollisionParticleGroup) -> None:
+		self.input = pygame.Vector2()
+
 		self.gravity = pygbase.Common.get_value("gravity")
 		self.gravity_down_multiplier = 1.5
 
@@ -38,6 +40,7 @@ class Player:
 		self.acceleration = pygame.Vector2()
 		self.velocity = pygame.Vector2()
 		self.pos = pygame.Vector2(pos)
+		self.prev_pos = self.pos.copy()
 
 		self.ground_rect = pygame.Rect((0, 0, 30, 110))
 		self.ground_rect.midbottom = self.pos
@@ -46,6 +49,8 @@ class Player:
 		self.water_rect.midbottom = self.pos
 
 		self.is_swimming = False
+		self.gun_land_to_water = False
+		self.gun_water_to_land = False
 
 		self.flip_x = False
 		self.animation = pygbase.AnimationManager([
@@ -60,7 +65,8 @@ class Player:
 		self.level = level
 		self.camera = camera
 
-		self.particle_manager = particle_manager
+		self.on_land_particle_manager = on_land_particle_manager
+		self.in_water_particle_manager = in_water_particle_manager
 		self.collision_particle_group = collision_particle_group
 
 		self.fire_gun_offset_land = (0, -60)
@@ -69,10 +75,12 @@ class Player:
 		self.particle_spawner_towards_mouse_offset = 32
 		self.particle_spawner_pos = self.pos + self.fire_gun_offset
 
-		self.fire_angle_deviation = 2
-		self.fire_velocity_range = (630, 800)
-		self.flamethrower_spawner = particle_manager.add_spawner(pygbase.PointSpawner(self.pos, 0.01, 2, False, "flamethrower", particle_manager, velocity_range=self.fire_velocity_range).link_pos(self.particle_spawner_pos))
-		self.gun_tip_fire_spawner = particle_manager.add_spawner(pygbase.CircleSpawner(self.pos, 0.2, 3, 10, False, "fire", particle_manager, radial_velocity_range=(0, 20)).link_pos(self.particle_spawner_pos))
+		self.fire_angle_deviation = 3
+		self.fire_velocity_range = (720, 830)
+		self.flamethrower_spawner = on_land_particle_manager.add_spawner(pygbase.PointSpawner(self.pos, 0.01, 2, False, "flamethrower", on_land_particle_manager, velocity_range=self.fire_velocity_range).link_pos(self.particle_spawner_pos))
+		self.boiling_water_spawner = in_water_particle_manager.add_spawner(pygbase.PointSpawner(self.pos, 0.01, 2, False, "boiling_water", in_water_particle_manager, velocity_range=self.fire_velocity_range).link_pos(self.particle_spawner_pos))
+		self.gun_tip_fire_spawner = on_land_particle_manager.add_spawner(pygbase.CircleSpawner(self.pos, 0.2, 3, 10, False, "fire", on_land_particle_manager, radial_velocity_range=(0, 20)).link_pos(self.particle_spawner_pos))
+		self.gun_tip_water_spawner = in_water_particle_manager.add_spawner(pygbase.CircleSpawner(self.pos, 0.2, 3, 10, False, "water_vapour", in_water_particle_manager, radial_velocity_range=(0, 20)).link_pos(self.particle_spawner_pos))
 
 		self.collision_particle_timer = pygbase.Timer(0.1, True, True)
 
@@ -83,6 +91,7 @@ class Player:
 		self.temperature = Temperature(self.pos, offset=(0, -self.ground_rect.height * 1.2), cooling_speed=15).link_pos(self.pos)
 		gun_duration_secs = 3
 		self.gun_heat = (self.temperature.cooling_speed + self.temperature.max_temperature / gun_duration_secs)
+		self.gun_heat = 0
 
 		self.can_fire = True
 
@@ -99,22 +108,21 @@ class Player:
 		is_water_animation = self.animation.current_state == "swim"
 
 		# X movement
-		input_x = pygbase.InputManager.get_key_pressed(pygame.K_d) - pygbase.InputManager.get_key_pressed(pygame.K_a)
-		if input_x != 0:
+		if self.input.x != 0:
 			if not is_water_animation:
 				self.animation.switch_state("run")
-			if input_x < 0:
+			if self.input.x < 0:
 				self.flip_x = True
-			elif input_x > 0:
+			elif self.input.x > 0:
 				self.flip_x = False
 
 			if not self.turn_timer.done():  # Turning
-				self.acceleration.x = input_x * self.acceleration_speed * 2
+				self.acceleration.x = self.input.x * self.acceleration_speed * 2
 				pygbase.DebugDisplay.draw_circle((10, 10), 5, "yellow")
 			else:
-				self.acceleration.x = input_x * self.acceleration_speed
+				self.acceleration.x = self.input.x * self.acceleration_speed
 
-			if abs(self.velocity.x) > 200 and input_x != get_sign(self.velocity.x):
+			if abs(self.velocity.x) > 200 and self.input.x != get_sign(self.velocity.x):
 				self.turn_timer.start()
 		else:
 			if self.animation.current_state == "run":
@@ -151,9 +159,7 @@ class Player:
 			self.acceleration.y = self.gravity * self.gravity_down_multiplier
 			pygbase.DebugDisplay.draw_circle((20, 10), 2, "red")
 
-		input_jump = pygbase.InputManager.get_key_pressed(pygame.K_w)
-
-		if input_jump and (self.on_ground or not self.fall_timer.done()):
+		if self.input.y < 0 and (self.on_ground or not self.fall_timer.done()):
 			self.velocity.y = 0
 			self.acceleration.y -= self.jump_impulse / delta
 			pygbase.DebugDisplay.draw_circle((20, 10), 5, "green")
@@ -178,27 +184,26 @@ class Player:
 					self.pos.y = rect.bottom + self.rect.height
 					self.velocity.y = 0
 
-		if prev_on_ground and not self.on_ground and input_jump == 0:
+		if prev_on_ground and not self.on_ground and self.input.y < 0 == 0:
 			self.fall_timer.start()
 
 		self.rect.midbottom = self.pos
 
 	def water_movement(self, delta):
 		# X movement
-		input_x = pygbase.InputManager.get_key_pressed(pygame.K_d) - pygbase.InputManager.get_key_pressed(pygame.K_a)
-		if input_x != 0:
-			if input_x < 0:
+		if self.input.x != 0:
+			if self.input.x < 0:
 				self.flip_x = True
-			elif input_x > 0:
+			elif self.input.x > 0:
 				self.flip_x = False
 
 			if not self.turn_timer.done():  # Turning
-				self.acceleration.x = input_x * self.acceleration_speed * 2
+				self.acceleration.x = self.input.x * self.acceleration_speed * 2
 				pygbase.DebugDisplay.draw_circle((10, 10), 5, "yellow")
 			else:
-				self.acceleration.x = input_x * self.acceleration_speed
+				self.acceleration.x = self.input.x * self.acceleration_speed
 
-			if abs(self.velocity.x) > 200 and input_x != get_sign(self.velocity.x):
+			if abs(self.velocity.x) > 200 and self.input.x != get_sign(self.velocity.x):
 				self.turn_timer.start()
 		else:
 			self.acceleration.x = -self.velocity.x * self.water_damping
@@ -227,15 +232,14 @@ class Player:
 		self.rect.midbottom = self.pos
 
 		# Y movement
-		input_y = pygbase.InputManager.get_key_pressed(pygame.K_s) - pygbase.InputManager.get_key_pressed(pygame.K_w)
-		if input_y != 0:
+		if self.input.y != 0:
 			if not self.turn_timer.done():  # Turning
-				self.acceleration.y = input_y * self.acceleration_speed * 2
+				self.acceleration.y = self.input.y * self.acceleration_speed * 2
 				pygbase.DebugDisplay.draw_circle((10, 10), 5, "yellow")
 			else:
-				self.acceleration.y = input_y * self.acceleration_speed
+				self.acceleration.y = self.input.y * self.acceleration_speed
 
-			if abs(self.velocity.y) > 200 and input_y != get_sign(self.velocity.y):
+			if abs(self.velocity.y) > 200 and self.input.y != get_sign(self.velocity.y):
 				self.turn_timer.start()
 		else:
 			self.acceleration.y = -self.velocity.y * self.water_damping
@@ -259,6 +263,9 @@ class Player:
 		self.rect.midbottom = self.pos
 
 	def update(self, delta: float):
+		self.gun_land_to_water = False
+		self.gun_water_to_land = False
+
 		self.temperature.tick(delta)
 		if self.temperature.get_percentage() < 0.8:
 			self.can_fire = True
@@ -280,12 +287,15 @@ class Player:
 		self.turn_timer.tick(delta)
 		self.fall_timer.tick(delta)
 
+		self.input.x = pygbase.InputManager.get_key_pressed(pygame.K_d) - pygbase.InputManager.get_key_pressed(pygame.K_a)
+		self.input.y = pygbase.InputManager.get_key_pressed(pygame.K_s) - pygbase.InputManager.get_key_pressed(pygame.K_w)
+
 		if self.pos.y <= self.water_level:
 			self.ground_movement(delta)
 			if self.animation.current_state == "swim" and self.on_ground:
 				self.animation.switch_state("idle")
 
-			elif self.animation.current_state != "idle" and abs(self.velocity.x) < 2:
+			elif self.input.x == 0 and self.animation.current_state != "idle" and abs(self.velocity.x) < 2:
 				self.animation.switch_state("idle")
 		else:
 			will_collide = False
@@ -305,17 +315,35 @@ class Player:
 
 		self.particle_spawner_pos.update(self.pos + self.fire_gun_offset + pygbase.utils.get_angled_vector(angle_to_mouse, self.particle_spawner_towards_mouse_offset))
 
+		if self.prev_pos.y + self.fire_gun_offset[1] <= self.water_level < self.pos.y + self.fire_gun_offset[1]:
+			self.gun_land_to_water = True
+			self.flamethrower_spawner.active = False
+			self.gun_tip_fire_spawner.active = False
+		elif self.prev_pos.y + self.fire_gun_offset[1] > self.water_level >= self.pos.y + self.fire_gun_offset[1]:
+			self.gun_water_to_land = True
+			self.boiling_water_spawner.active = False
+			self.gun_tip_water_spawner.active = False
+
+		if self.water_level < self.pos.y + self.fire_gun_offset[1]:
+			stream_spawner = self.boiling_water_spawner
+			tip_spawner = self.gun_tip_water_spawner
+			fire_deviation = self.fire_angle_deviation * 3
+		else:
+			stream_spawner = self.flamethrower_spawner
+			tip_spawner = self.gun_tip_fire_spawner
+			fire_deviation = self.fire_angle_deviation
+
 		if pygbase.InputManager.get_mouse_pressed(0) and self.can_fire:
-			self.flamethrower_spawner.angle_range = (angle_to_mouse - self.fire_angle_deviation, angle_to_mouse + self.fire_angle_deviation)
+			stream_spawner.angle_range = (angle_to_mouse - fire_deviation, angle_to_mouse + fire_deviation)
 
 			mouse_vector = pygbase.utils.get_angled_vector(angle_to_mouse, 1)
 			additional_velocity = self.velocity.dot(mouse_vector)
-			self.flamethrower_spawner.velocity_range = (self.fire_velocity_range[0] + additional_velocity, self.fire_velocity_range[1] + additional_velocity)
-			self.flamethrower_spawner.active = True
-			self.gun_tip_fire_spawner.active = True
+			stream_spawner.velocity_range = (self.fire_velocity_range[0] + additional_velocity, self.fire_velocity_range[1] + additional_velocity)
+			stream_spawner.active = True
+			tip_spawner.active = True
 
 			if self.collision_particle_timer.done():
-				self.collision_particle_group.add_particle(self.particle_spawner_pos, pygbase.utils.get_angled_vector(random.uniform(*self.flamethrower_spawner.angle_range), random.uniform(*self.flamethrower_spawner.velocity_range)))
+				self.collision_particle_group.add_particle(self.particle_spawner_pos, pygbase.utils.get_angled_vector(random.uniform(*stream_spawner.angle_range), random.uniform(*stream_spawner.velocity_range)))
 
 				self.collision_particle_timer.start()
 
@@ -324,8 +352,10 @@ class Player:
 			if not self.temperature.not_maxed():
 				self.can_fire = False
 		else:
-			self.flamethrower_spawner.active = False
-			self.gun_tip_fire_spawner.active = False
+			stream_spawner.active = False
+			tip_spawner.active = False
+
+		self.prev_pos = self.pos.copy()
 
 	def draw(self, surface: pygame.Surface, camera: pygbase.Camera):
 		self.animation.draw_at_pos(surface, self.pos, camera, flip=(self.flip_x, False), draw_pos="midbottom")

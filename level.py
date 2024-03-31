@@ -20,7 +20,8 @@ class Level:
 
 		# {tile_layer: parallax_layer}
 		self.parallax_layer_key: dict[int, int] = {
-			2: 1,
+			3: 1,
+			2: 0,
 			1: 0,
 			0: 0,
 			-1: 0,
@@ -33,23 +34,32 @@ class Level:
 			if layer not in self.parallax_layer_key:
 				raise ValueError(f"Missing parallax key for tile layer {layer}")
 
-		self.load()
+		self.player_spawn_pos, self.water_enemy_spawn_locations, self.heart_of_the_sea_pos = self.load()
 
-	def load(self):
+	def load(self) -> tuple[tuple, list[tuple], tuple]:
 		file_path = ASSET_DIR / "levels" / f"{self.LEVEL_NAME}.json"
 
 		if not file_path.is_file():
 			init_data = {
 				"tiles": {
 					0: {}
-				}
+				},
+				"player_spawn_pos": [0, 0],
+				"water_enemy_spawn_locations": [],
+				"heart_of_the_sea_pos": [10000, 0]
 			}
 
 			with open(file_path, "x") as level_file:
 				level_file.write(json.dumps(init_data))
+
+			return (0, 0), [], (10000, 0)
 		else:
 			with open(file_path, "r") as level_file:
 				level_data = json.load(level_file)
+
+			player_spawn_pos = level_data["player_spawn_pos"] if "player_spawn_pos" in level_data else (0, 0)
+			enemy_spawn_locations = level_data["water_enemy_spawn_locations"] if "water_enemy_spawn_locations" in level_data else []
+			heart_of_the_sea_pos = level_data["heart_of_the_sea_pos"] if "heart_of_the_sea_pos" in level_data else [10000, 0]
 
 			for layer_index, layer in level_data["tiles"].items():
 				for str_tile_pos, tile in layer.items():
@@ -62,6 +72,8 @@ class Level:
 					else:
 						self.add_sheet_tile(tile_pos, int(layer_index), tile["sheet_name"], tile["index"])
 
+			return player_spawn_pos, enemy_spawn_locations, heart_of_the_sea_pos
+
 	def save(self):
 		logging.info("Saving level")
 
@@ -70,8 +82,11 @@ class Level:
 		if not file_path.is_file():
 			init_data = {
 				"tiles": {
-					"0": {}
-				}
+					0: {}
+				},
+				"player_spawn_pos": [0, 0],
+				"water_enemy_spawn_locations": [],
+				"heart_of_the_sea_pos": [10000, 0]
 			}
 
 			with open(file_path, "x") as level_file:
@@ -101,6 +116,10 @@ class Level:
 
 			level_data["tiles"] = json_tiles
 
+			level_data["player_spawn_pos"] = self.player_spawn_pos
+			level_data["water_enemy_spawn_locations"] = self.water_enemy_spawn_locations
+			level_data["heart_of_the_sea_pos"] = self.heart_of_the_sea_pos
+
 			with open(file_path, "w") as level_file:
 				level_file.write(json.dumps(level_data))
 
@@ -111,7 +130,7 @@ class Level:
 			return 0
 
 	def get_colliders(self, layer: int = 0) -> tuple[pygame.Rect]:
-		return tuple(tile.rect for tile in self.tiles[layer].values())  # NoQA
+		return tuple(tile._rect for tile in self.tiles[layer].values())  # NoQA
 
 	def get_tile_pos(self, pos: tuple):
 		return int(pos[0] // self.tile_size[0]), int(pos[1] // self.tile_size[1])
@@ -179,6 +198,13 @@ class Level:
 		for layer_index, layer in sorted(self.tiles.items(), key=lambda e: e[0]):
 			for tile in layer.values():
 				tile.editor_draw(surface, camera)
+
+		pygame.draw.circle(surface, "yellow", camera.world_to_screen(self.player_spawn_pos), 50, width=5)
+
+		for water_monster_spawn_pos in self.water_enemy_spawn_locations:
+			pygame.draw.circle(surface, "light blue", camera.world_to_screen(water_monster_spawn_pos), 40, width=5)
+
+		pygame.draw.circle(surface, "light blue", camera.world_to_screen(self.heart_of_the_sea_pos), 400, width=10)
 
 	def layered_editor_draw(self, surface: pygame.Surface, camera: pygbase.Camera, current_layer: int):
 		for layer_index, layer in sorted(self.tiles.items(), key=lambda e: e[0]):

@@ -8,7 +8,7 @@ from editor import Editor
 from files import ASSET_DIR
 from game import Game
 
-DEBUG = True
+DEBUG = False
 DO_PROFILE = False
 
 if __name__ == '__main__':
@@ -26,7 +26,7 @@ if __name__ == '__main__':
 		"flamethrower",
 		[(249, 194, 43), (245, 125, 74), (234, 79, 54), (251, 107, 29), (232, 59, 59)],
 		(6, 12),
-		(5, 8),
+		(5, 6),
 		(0.2, 1),
 		(0, 10),
 		True,
@@ -36,7 +36,7 @@ if __name__ == '__main__':
 		"fire",
 		[(249, 194, 43), (245, 125, 74), (234, 79, 54), (251, 107, 29), (232, 59, 59)],
 		(6, 12),
-		(7, 10),
+		(6, 8),
 		(0, 1),
 		(0, -2),
 		True,
@@ -63,7 +63,7 @@ if __name__ == '__main__':
 		((0.0, 0.1), (0.0, 0.4))
 	)
 	pygbase.add_particle_setting(
-		"boiled_water",
+		"water_vapour",
 		["light blue"],
 		(5, 8),
 		(6, 8),
@@ -71,6 +71,16 @@ if __name__ == '__main__':
 		(0, -10),
 		True,
 		((0.0, 0.1), (0.0, 0.4))
+	)
+	pygbase.add_particle_setting(
+		"boiling_water",
+		["light blue"],
+		(6, 12),
+		(6, 8),
+		(2, 2),
+		(0, 0),
+		True,
+		((0.0, 0.1), (0.0, 0.1))
 	)
 
 	tile_scale = 4

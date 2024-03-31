@@ -24,7 +24,7 @@ class Editor(pygbase.GameState, name="editor"):
 			(pygbase.UIValue(10), pygbase.UIValue(10)),
 			(pygbase.UIValue(250), pygbase.UIValue(50)),
 			"ui",
-			["Tile", "Sheet", "View"],
+			["Tile", "Sheet", "Entity", "View"],
 			self.ui.base_container,
 			bg_colour=(40, 40, 40, 40)
 		))
@@ -34,17 +34,21 @@ class Editor(pygbase.GameState, name="editor"):
 		self.tile_layer_text = None
 		self.create_tile_layer_ui()
 
-		self.tile_editing_ui = None
+		self.tile_editing_ui: pygbase.Frame | None = None
 		self.current_tile = None
 		self.create_tile_edit_ui()
 
-		self.sheet_tile_editing_ui = None
+		self.sheet_tile_editing_ui: pygbase.Frame | None = None
 		self.sprite_sheets: dict[str, pygbase.SpriteSheet] = pygbase.ResourceManager.get_resources_of_type("tile_sheets")
 		self.sprite_sheet_tile_frames = None
 		self.sheet_selector = None
 		self.current_sheet: str | None = None
 		self.current_sheet_index: int | None = 0
 		self.create_sheet_tile_edit_ui()
+
+		self.entity_editing_ui: pygbase.Frame | None = None
+		self.current_entity_mode: pygbase.TextSelectionMenu | None = None
+		self.create_entity_editing_ui()
 
 		self.prev_mouse_tile_pos = (0, 0)
 
@@ -187,6 +191,23 @@ class Editor(pygbase.GameState, name="editor"):
 					index=index
 				), add_on_to_previous=add_on, align_with_previous=align)
 
+	def create_entity_editing_ui(self):
+		self.entity_editing_ui = self.ui.add_frame(pygbase.Frame(
+			(pygbase.UIValue(0), pygbase.UIValue(0)),
+			(pygbase.UIValue(1, False), pygbase.UIValue(1, False)),
+			self.ui.base_container,
+			blocks_mouse=False
+		))
+
+		self.current_entity_mode = self.entity_editing_ui.add_element(pygbase.TextSelectionMenu(
+			(pygbase.UIValue(10), pygbase.UIValue(70)),
+			(pygbase.UIValue(500), pygbase.UIValue(50)),
+			"ui",
+			["player", "w_monster", "heart_of_sea"],
+			self.sheet_tile_editing_ui,
+			bg_colour=(40, 40, 40, 40)
+		))
+
 	def tile_layer_up_button_callback(self):
 		self.tile_layer_text.set_text(str(self.get_current_tile_layer() + 1))
 
@@ -217,14 +238,15 @@ class Editor(pygbase.GameState, name="editor"):
 	def get_current_tile_layer(self) -> int:
 		return int(self.tile_layer_text.text.text)
 
-	def get_mouse_tile_pos(self):
+	def get_mouse_pos(self):
 		mouse_pos = pygame.Vector2(pygame.mouse.get_pos())
 		mouse_pos.x = (mouse_pos.x - self.screen_size[0] / 2) * (1 - self.level.get_parallax_layer(self.get_current_tile_layer()) * self.level.parallax_amount) + self.screen_size[0] / 2
 		mouse_pos.y = (mouse_pos.y - self.screen_size[1] / 2) * (1 - self.level.get_parallax_layer(self.get_current_tile_layer()) * self.level.parallax_amount) + self.screen_size[1] / 2
 
-		world_mouse_pos = self.camera_controller.camera.screen_to_world(mouse_pos)
+		return self.camera_controller.camera.screen_to_world(mouse_pos)
 
-		return self.level.get_tile_pos(world_mouse_pos)
+	def get_mouse_tile_pos(self):
+		return self.level.get_tile_pos(self.get_mouse_pos())
 
 	def update(self, delta: float):
 		self.ui.update(delta)
@@ -233,16 +255,25 @@ class Editor(pygbase.GameState, name="editor"):
 				self.tile_layer_ui.active = True
 				self.tile_editing_ui.active = True
 				self.sheet_tile_editing_ui.active = False
+				self.entity_editing_ui.active = False
 				self.set_active_sheet_tiles(all_false=True)
 			case "Sheet":
 				self.tile_layer_ui.active = True
 				self.tile_editing_ui.active = False
 				self.sheet_tile_editing_ui.active = True
+				self.entity_editing_ui.active = False
 				self.set_active_sheet_tiles()
+			case "Entity":
+				self.tile_layer_ui.active = False
+				self.tile_editing_ui.active = False
+				self.sheet_tile_editing_ui.active = False
+				self.entity_editing_ui.active = True
+				self.set_active_sheet_tiles(all_false=True)
 			case _:
 				self.tile_layer_ui.active = False
 				self.tile_editing_ui.active = False
 				self.sheet_tile_editing_ui.active = False
+				self.entity_editing_ui.active = False
 				self.set_active_sheet_tiles(all_false=True)
 
 		if pygbase.InputManager.get_key_just_pressed(pygame.K_s) and (pygbase.InputManager.check_modifiers(pygame.KMOD_CTRL) or pygbase.InputManager.check_modifiers(pygame.KMOD_META)):
@@ -270,6 +301,32 @@ class Editor(pygbase.GameState, name="editor"):
 						self.level.add_sheet_tile(self.get_mouse_tile_pos(), self.get_current_tile_layer(), self.current_sheet, self.current_sheet_index)
 					if pygbase.InputManager.get_mouse_pressed(2):
 						self.level.remove_tile(self.get_mouse_tile_pos(), self.get_current_tile_layer())
+				case "Entity":
+					if pygbase.InputManager.get_mouse_just_pressed(0):
+						if self.current_entity_mode.get_current_text() == "player":
+							if pygbase.InputManager.check_modifiers(pygame.KMOD_SHIFT):
+								self.level.player_spawn_pos = (self.get_mouse_pos()[0], self.get_mouse_tile_pos()[1] * self.level.tile_size[1])
+							else:
+								self.level.player_spawn_pos = tuple(self.get_mouse_pos())
+
+						elif self.current_entity_mode.get_current_text() == "w_monster":
+							if pygbase.InputManager.check_modifiers(pygame.KMOD_SHIFT):
+								spawn_pos = (self.get_mouse_pos()[0], self.get_mouse_tile_pos()[1] * self.level.tile_size[1])
+							else:
+								spawn_pos = tuple(self.get_mouse_pos())
+							self.level.water_enemy_spawn_locations.append(spawn_pos)
+
+						elif self.current_entity_mode.get_current_text() == "heart_of_sea":
+							if pygbase.InputManager.check_modifiers(pygame.KMOD_SHIFT):
+								self.level.heart_of_the_sea_pos = (self.get_mouse_pos()[0], self.get_mouse_tile_pos()[1] * self.level.tile_size[1])
+							else:
+								self.level.heart_of_the_sea_pos = tuple(self.get_mouse_pos())
+
+					elif pygbase.InputManager.get_mouse_pressed(2):
+						if self.current_entity_mode.get_current_text() == "w_monster":
+							for pos in self.level.water_enemy_spawn_locations[:]:
+								if self.get_mouse_pos().distance_to(pos) < 40:
+									self.level.water_enemy_spawn_locations.remove(pos)
 
 			self.prev_mouse_tile_pos = self.get_mouse_tile_pos()
 
@@ -288,6 +345,8 @@ class Editor(pygbase.GameState, name="editor"):
 					self.level.layered_editor_draw(surface, self.camera_controller.camera, self.get_current_tile_layer())
 				else:
 					self.level.single_layer_editor_draw(surface, self.camera_controller.camera, self.get_current_tile_layer())
+			case "Entity":
+				self.level.editor_draw(surface, self.camera_controller.camera)
 			case "View":
 				self.level.draw(surface, self.camera_controller.camera, [], 0)
 			case _:
@@ -321,11 +380,14 @@ class Editor(pygbase.GameState, name="editor"):
 						Tile(self.get_mouse_tile_pos(), self.tile_size, self.level.get_parallax_layer(self.get_current_tile_layer()), self.level.parallax_amount).set_sprite_sheet(self.current_sheet, self.current_sheet_index).editor_draw_overlay(surface, self.camera_controller.camera)
 					else:
 						pygame.draw.rect(surface, "red", (self.camera_controller.camera.world_to_screen((self.get_mouse_tile_pos()[0] * self.tile_size[0], self.get_mouse_tile_pos()[1] * self.tile_size[1])), self.tile_size), width=2)
+				case "Entity":
+					pygame.draw.circle(surface, "yellow", pygame.mouse.get_pos(), 5)
 
-		# World Reference
-		center_point = self.camera_controller.camera.world_to_screen((0, 0))
-		pygame.draw.line(surface, "yellow", (0, center_point[1]), (800, center_point[1]))
+		if self.mode_selector.get_current_text() != "View":
+			# World Reference
+			center_point = self.camera_controller.camera.world_to_screen((0, 0))
+			pygame.draw.line(surface, "yellow", (0, center_point[1]), (800, center_point[1]))
 
-		pygame.draw.circle(surface, "yellow", center_point, 5)
+			pygame.draw.circle(surface, "yellow", center_point, 5)
 
 		self.ui.draw(surface)

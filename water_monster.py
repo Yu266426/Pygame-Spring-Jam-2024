@@ -114,7 +114,7 @@ class WaterMonster:
 		self.water_particle_spawner = particle_manager.add_spawner(
 			pygbase.CircleSpawner(self.pos, 0.1, 4, 30, False, "water", particle_manager, radial_velocity_range=(0, 100))
 		).link_pos(self.water_orb_average_pos)
-		self.water_particle_settings = pygbase.Common.get_particle_setting("boiled_water")
+		self.death_water_particle_settings = pygbase.Common.get_particle_setting("water_vapour")
 
 		self.outline_draw_surface: pygame.Surface = pygbase.Common.get_value("water_outline_surface")
 		self.water_draw_surfaces: dict[str | tuple, pygame.Surface] = pygbase.Common.get_value("water_surfaces")
@@ -227,7 +227,7 @@ class WaterMonster:
 
 		for _ in range(random.randint(50, 120)):
 			offset = pygbase.utils.get_angled_vector(random.uniform(0, 360), 1)
-			self.particle_manager.add_particle(self.water_orb_average_pos + offset * random.uniform(0, 50), self.water_particle_settings, initial_velocity=offset * random.uniform(0, 200))
+			self.particle_manager.add_particle(self.water_orb_average_pos + offset * random.uniform(0, 50), self.death_water_particle_settings, initial_velocity=offset * random.uniform(0, 200))
 
 
 class WaterMonsterGroup:

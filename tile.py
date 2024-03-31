@@ -24,7 +24,11 @@ class Tile:
 		self.original_image: pygbase.Image | None = None
 		self.image: pygame.Surface | None = None
 
-		self.rect: pygame.Rect = pygame.Rect(self.pos, (tile_size[0] * self.parallax_factor, tile_size[1] * self.parallax_factor))
+		self._rect: pygame.Rect = pygame.Rect(self.pos, (tile_size[0] * self.parallax_factor, tile_size[1] * self.parallax_factor))
+
+	@property
+	def rect(self):
+		return self._rect
 
 	def set_image(self, tile_name: str) -> "Tile":
 		self.from_sheet = False
