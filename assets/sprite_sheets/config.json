@@ -7,6 +7,14 @@
     "scale": 0,
     "rotatable": false
   },
+  "player_swim": {
+    "rows": 1,
+    "columns": 4,
+    "tile_width": 32,
+    "tile_height": 11,
+    "scale": 0,
+    "rotatable": false
+  },
   "player_walk": {
     "rows": 1,
     "columns": 4,

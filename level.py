@@ -20,6 +20,8 @@ class Level:
 
 		# {tile_layer: parallax_layer}
 		self.parallax_layer_key: dict[int, int] = {
+			2: 1,
+			1: 0,
 			0: 0,
 			-1: 0,
 			-2: -1,
@@ -127,8 +129,13 @@ class Level:
 			if len(self.tiles[layer].keys()) == 0:
 				del self.tiles[layer]
 
-	def draw(self, surface: pygame.Surface, camera: pygbase.Camera, entities: list, entity_layer: int):
+	def draw(self, surface: pygame.Surface, camera: pygbase.Camera, entities: list, entity_layer: int, exclude_layers: set[int] | None = None):
+		exclude_layers = {} if exclude_layers is None else exclude_layers
+
 		for layer_index, layer in sorted(self.tiles.items(), key=lambda e: e[0]):
+			if layer_index in exclude_layers:
+				continue
+
 			parallax_key = self.get_parallax_layer(layer_index)
 
 			x_parallax_amount = self.screen_size[0] * (1 + parallax_key * self.parallax_amount) / 2
@@ -152,6 +159,22 @@ class Level:
 				for entities in entities:
 					entities.draw(surface, camera)
 
+	def single_layer_draw(self, surface: pygame.Surface, camera: pygbase.Camera, layer_index: int):
+		layer = self.tiles[layer_index]
+		parallax_key = self.get_parallax_layer(layer_index)
+
+		x_parallax_amount = self.screen_size[0] * (1 + parallax_key * self.parallax_amount) / 2
+		y_parallax_amount = self.screen_size[1] * (1 + parallax_key * self.parallax_amount) / 2
+
+		top_left = self.get_tile_pos(camera.screen_to_world((-x_parallax_amount, -y_parallax_amount)))
+		bottom_right = self.get_tile_pos(camera.screen_to_world((self.screen_size[0] + x_parallax_amount, self.screen_size[1] + y_parallax_amount)))
+
+		for row in range(top_left[1], bottom_right[1]):
+			for col in range(top_left[0], bottom_right[0]):
+				tile = layer.get((col, row))
+				if tile is not None:
+					tile.draw(surface, camera)
+
 	def editor_draw(self, surface: pygame.Surface, camera: pygbase.Camera):
 		for layer_index, layer in sorted(self.tiles.items(), key=lambda e: e[0]):
 			for tile in layer.values():
@@ -166,7 +189,7 @@ class Level:
 				for tile in layer.values():
 					tile.editor_draw_dark(surface, camera)
 
-	def single_level_draw(self, surface: pygame.Surface, camera: pygbase.Camera, current_layer: int):
+	def single_layer_editor_draw(self, surface: pygame.Surface, camera: pygbase.Camera, current_layer: int):
 		if current_layer in self.tiles:
 			for tile in self.tiles[current_layer].values():
 				tile.editor_draw(surface, camera)

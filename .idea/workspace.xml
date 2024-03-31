@@ -5,19 +5,22 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5e716f3a-44ea-42ac-ba11-3585d3b1504c" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/art/.road_end_right_dirt.kra-autosave.kra" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/art/deep_road_bottom_right_end_dirt_1.kra" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/art/deep_road_right_end_dirt_1.kra" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/art/road_end_right_dirt.kra" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/tiles/deep_road_bottom_right_end_dirt_1.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/tiles/deep_road_right_end_dirt_1.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/tiles/road_end_right_dirt.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/art/.water_1.kra-autosave.kra" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/art/player_swim.kra" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/art/water_1.kra" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/sprite_sheets/player_swim.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/tiles/water_1.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/assets/levels/level.json" beforeDir="false" afterPath="$PROJECT_DIR$/assets/levels/level.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/sprite_sheets/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/assets/sprite_sheets/config.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/assets/tiles/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/assets/tiles/config.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/editor.py" beforeDir="false" afterPath="$PROJECT_DIR$/editor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/game.py" beforeDir="false" afterPath="$PROJECT_DIR$/game.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/level.py" beforeDir="false" afterPath="$PROJECT_DIR$/level.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/player.py" beforeDir="false" afterPath="$PROJECT_DIR$/player.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tile.py" beforeDir="false" afterPath="$PROJECT_DIR$/tile.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/water_monster.py" beforeDir="false" afterPath="$PROJECT_DIR$/water_monster.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -66,10 +69,10 @@
       <recent name="$PROJECT_DIR$/assets/ui" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/assets/sprite_sheets" />
       <recent name="$PROJECT_DIR$/assets/tile_sheets" />
       <recent name="$PROJECT_DIR$" />
       <recent name="$PROJECT_DIR$/art" />
-      <recent name="$PROJECT_DIR$/assets/sprite_sheets" />
     </key>
   </component>
   <component name="RunAnythingCache">

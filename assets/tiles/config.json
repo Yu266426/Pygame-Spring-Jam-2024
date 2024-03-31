@@ -62,5 +62,9 @@
   "road_end_right_dirt": {
     "scale": 4,
     "rotatable": false
+  },
+  "water_1": {
+    "scale": 4,
+    "rotatable": false
   }
 }

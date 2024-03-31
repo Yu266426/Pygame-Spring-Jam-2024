@@ -8,7 +8,7 @@ from editor import Editor
 from files import ASSET_DIR
 from game import Game
 
-DEBUG = False
+DEBUG = True
 DO_PROFILE = False
 
 if __name__ == '__main__':
@@ -84,6 +84,8 @@ if __name__ == '__main__':
 	pygbase.Common.set_value("water_outline_surface", pygame.Surface(pygbase.Common.get_value("screen_size"), flags=pygame.SRCALPHA))
 
 	pygbase.Common.set_value("parallax_image_cache", {})
+
+	pygbase.Common.set_value("water_level", 20)
 
 	water_draw_surfaces: dict[str | tuple, pygame.Surface] = {}
 	for color in water_monster_colors:

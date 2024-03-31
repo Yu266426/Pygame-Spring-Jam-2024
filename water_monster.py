@@ -38,7 +38,8 @@ class WaterMonsterAI:
 	def update(self, delta: float, player_pos: pygame.Vector2, level_colliders: tuple[pygame.Rect]):
 		offset_vector = player_pos - self.pos
 		dist_to_player = offset_vector.length()
-		offset_vector.normalize_ip()
+		if offset_vector.length() != 0:
+			offset_vector.normalize_ip()
 
 		match self.current_state:
 			case WaterMonsterStates.SEARCH:
@@ -58,7 +59,7 @@ class WaterMonsterAI:
 				elif dist_to_player < self.attack_radius:
 					self.current_state = WaterMonsterStates.GARBAGE_ATTACK
 			case WaterMonsterStates.GARBAGE_ATTACK:
-				self.movement.update(-offset_vector.normalize().x, 0)
+				self.movement.update(-offset_vector.x, 0)
 
 				if dist_to_player > self.attack_radius:
 					self.current_state = WaterMonsterStates.SEARCH
@@ -94,7 +95,7 @@ class WaterMonster:
 		self.jump_impulse = 600
 
 		self.max_speed_x = 100
-		self.max_speed_y = 10000
+		self.max_speed_y = 100
 
 		self.acceleration = pygame.Vector2(0, 0)
 		self.velocity = pygame.Vector2()
@@ -160,7 +161,7 @@ class WaterMonster:
 			self.on_ground = False
 
 		self.velocity.y += self.acceleration.y * delta
-		self.velocity.y = pygame.math.clamp(self.velocity.y, -self.max_speed_y, self.max_speed_y)
+		self.velocity.y = pygame.math.clamp(self.velocity.y, -self.max_speed_y * 10, self.max_speed_y)
 
 		self.pos.y += self.velocity.y * delta + 0.5 * self.acceleration.y * (delta ** 2)
 		self.rect.midbottom = self.pos

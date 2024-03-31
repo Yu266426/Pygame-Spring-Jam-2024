@@ -9,6 +9,8 @@ class Tile:
 		self.parallax_layer: int = parallax_layer
 		self.parallax_amount: float = parallax_amount
 
+		self.buffer_factor = 1.08 if self.parallax_layer != 0 else 1
+
 		self.parallax_factor = max(1 + self.parallax_layer * self.parallax_amount, 0)
 
 		self.pos: pygame.Vector2 = pygame.Vector2(pos[0] * tile_size[0], pos[1] * tile_size[1])
@@ -33,7 +35,7 @@ class Tile:
 
 		image_cache = pygbase.Common.get_value("parallax_image_cache")
 		if (self.parallax_layer, tile_name) not in image_cache:
-			self.image = image_cache[(self.parallax_layer, tile_name)] = pygame.transform.scale_by(image, self.parallax_factor * 1.08)
+			self.image = image_cache[(self.parallax_layer, tile_name)] = pygame.transform.scale_by(image, self.parallax_factor * self.buffer_factor)
 		else:
 			self.image = image_cache[(self.parallax_layer, tile_name)]
 
@@ -49,7 +51,7 @@ class Tile:
 
 		image_cache = pygbase.Common.get_value("parallax_image_cache")
 		if (self.parallax_layer, sheet_name, index) not in image_cache:
-			self.image = image_cache[(self.parallax_layer, sheet_name, index)] = pygame.transform.scale_by(image, self.parallax_factor * 1.08)
+			self.image = image_cache[(self.parallax_layer, sheet_name, index)] = pygame.transform.scale_by(image, self.parallax_factor * self.buffer_factor)
 		else:
 			self.image = image_cache[(self.parallax_layer, sheet_name, index)]
 

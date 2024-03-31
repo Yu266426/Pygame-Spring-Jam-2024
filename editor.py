@@ -282,12 +282,12 @@ class Editor(pygbase.GameState, name="editor"):
 				if not self.hide_other_layers:
 					self.level.layered_editor_draw(surface, self.camera_controller.camera, self.get_current_tile_layer())
 				else:
-					self.level.single_level_draw(surface, self.camera_controller.camera, self.get_current_tile_layer())
+					self.level.single_layer_editor_draw(surface, self.camera_controller.camera, self.get_current_tile_layer())
 			case "Sheet":
 				if not self.hide_other_layers:
 					self.level.layered_editor_draw(surface, self.camera_controller.camera, self.get_current_tile_layer())
 				else:
-					self.level.single_level_draw(surface, self.camera_controller.camera, self.get_current_tile_layer())
+					self.level.single_layer_editor_draw(surface, self.camera_controller.camera, self.get_current_tile_layer())
 			case "View":
 				self.level.draw(surface, self.camera_controller.camera, [], 0)
 			case _:
@@ -313,9 +313,7 @@ class Editor(pygbase.GameState, name="editor"):
 						screen_pos = (
 							(screen_pos[0] - self.screen_size[0] / 2) * parallax_factor + self.screen_size[0] / 2,
 							(screen_pos[1] - self.screen_size[1] / 2) * parallax_factor + self.screen_size[1] / 2
-						)  # TODO: Fix
-
-						print(screen_pos, parallax_factor)
+						)
 
 						pygame.draw.rect(surface, "red", (screen_pos, tile_size), width=2)
 				case "Sheet":

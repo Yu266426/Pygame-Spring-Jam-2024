@@ -30,7 +30,7 @@ class Game(pygbase.GameState, name="game"):
 		self.fire_particle_settings = pygbase.Common.get_particle_setting("fire")
 		self.smoke_particle_settings = pygbase.Common.get_particle_setting("smoke")
 
-		player_spawn_pos = (0, 0)
+		player_spawn_pos = (5000, 0)
 		self.camera = pygbase.Camera(player_spawn_pos - pygame.Vector2(pygbase.Common.get_value("screen_size")) / 2)
 		pygbase.Common.set_value("camera", self.camera)
 		self.player = Player(player_spawn_pos, self.level, self.camera, self.particle_manager, self.collision_particle_group)
@@ -43,9 +43,9 @@ class Game(pygbase.GameState, name="game"):
 		self.particle_manager.update(delta)
 		particle_collision_positions = self.collision_particle_group.update(delta, water_monster_colliders)
 
-		hits = self.projectile_group.update(delta, [self.player.rect])
+		hits = self.projectile_group.update(delta, [self.player.ground_rect])
 		for hit in hits:
-			if hit[0].colliderect(self.player.rect):
+			if hit[0].colliderect(self.player.ground_rect):
 				self.player.health.damage(hit[1])
 
 				self.camera.shake_screen(0.3)
@@ -73,7 +73,7 @@ class Game(pygbase.GameState, name="game"):
 			water_draw_surface.fill((0, 0, 0, 0))
 
 		near_water_monsters = self.water_monster_group.get_monsters(self.player.pos)
-		self.level.draw(surface, self.camera, [self.player, *near_water_monsters], 0)
+		self.level.draw(surface, self.camera, [self.player, *near_water_monsters], 0, exclude_layers={1})
 
 		self.projectile_group.draw(surface, self.camera)
 
@@ -85,6 +85,8 @@ class Game(pygbase.GameState, name="game"):
 
 			surface.blit(water_draw_surface, (0, 0))
 		surface.blit(self.outline_draw_surface, (0, 0))
+
+		self.level.single_layer_draw(surface, self.camera, 1)  # Water
 
 		for water_monster in near_water_monsters:
 			water_monster.draw_ui(surface, self.camera)
