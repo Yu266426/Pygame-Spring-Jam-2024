@@ -8,7 +8,6 @@ import pygbase
 from level import Level
 from projectiles import ProjectileGroup, GarbageProjectile
 from temperature import Temperature
-from utils import get_sign
 from water_orb import WaterOrbGroup
 
 
@@ -25,7 +24,7 @@ class WaterMonsterStates(enum.Enum):
 
 
 class WaterMonsterAI:
-	def __init__(self, linked_pos: pygame.Vector2, temperature: Temperature, search_radius: float = 600, attack_radius: float = 300):
+	def __init__(self, linked_pos: pygame.Vector2, temperature: Temperature, search_radius: float = 700, attack_radius: float = 320):
 		self.pos = linked_pos
 		self.temperature = temperature
 
@@ -105,23 +104,21 @@ class WaterMonster:
 		self.rect.midbottom = self.pos
 
 		self.water_orb_group = WaterOrbGroup(pos, (0, -80), random.randint(8, 15), (5, 30), attraction_offset_range=((-10, 10), (-50, 50))).link_pos(self.pos)
+		self.water_orb_average_pos = self.water_orb_group.get_orb_average_pos()
 
 		self.level = level
 		self.level_colliders = self.level.get_colliders(0)
 
 		self.particle_manager = particle_manager
-		self.particle_spawner_offset = (0, -80)
-		self.particle_spawner_pos = self.pos + self.particle_spawner_offset
 		self.water_particle_spawner = particle_manager.add_spawner(
 			pygbase.CircleSpawner(self.pos, 0.1, 4, 30, False, "water", particle_manager, radial_velocity_range=(0, 100))
-		).link_pos(self.particle_spawner_pos)
+		).link_pos(self.water_orb_average_pos)
 		self.water_particle_settings = pygbase.Common.get_particle_setting("boiled_water")
 
 		self.outline_draw_surface: pygame.Surface = pygbase.Common.get_value("water_outline_surface")
 		self.water_draw_surfaces: dict[str | tuple, pygame.Surface] = pygbase.Common.get_value("water_surfaces")
 
-		self.thermometer_pos: pygame.Vector2 = self.pos.copy()
-		self.temperature = Temperature(self.thermometer_pos, offset=(0, -80)).link_pos(self.thermometer_pos)
+		self.temperature = Temperature(self.water_orb_average_pos, offset=(0, -80)).link_pos(self.water_orb_average_pos)
 
 		self.ai = WaterMonsterAI(self.pos, self.temperature)
 
@@ -185,7 +182,7 @@ class WaterMonster:
 	def attacks(self, player_pos: tuple | pygame.Vector2):
 		attack = self.ai.get_attack()
 
-		towards_player_vec = (player_pos + (0, -80)) - self.particle_spawner_pos
+		towards_player_vec = (player_pos + (0, -80)) - self.water_orb_average_pos
 
 		match attack:
 			case WaterMonsterAttacks.GARBAGE_THROW:
@@ -195,7 +192,7 @@ class WaterMonster:
 						initial_x_velocity,
 						-((0.5 * self.gravity * (towards_player_vec.x ** 2) / initial_x_velocity) - towards_player_vec.y * initial_x_velocity) / towards_player_vec.x
 					)
-					self.projectile_group.add_projectile(GarbageProjectile(self.particle_spawner_pos, throw_vec))
+					self.projectile_group.add_projectile(GarbageProjectile(self.water_orb_average_pos, throw_vec))
 
 					self.garbage_throw_timer.set_cooldown(random.uniform(*self.garbage_throw_cooldown_range))
 					self.garbage_throw_timer.start()
@@ -209,13 +206,13 @@ class WaterMonster:
 		self.water_orb_group.update(delta)
 
 		self.movement(delta)
-		self.particle_spawner_pos.update(self.pos + self.particle_spawner_offset)
-		self.thermometer_pos.update(self.water_orb_group.get_orb_average_pos())
+		self.water_orb_average_pos.update(self.water_orb_group.get_orb_average_pos())
 
 		self.attacks(player_pos)
 
 	def draw(self, surface: pygame.Surface, camera: pygbase.Camera):
 		pygbase.DebugDisplay.draw_rect(camera.world_to_screen_rect(self.rect), "yellow")
+		pygbase.DebugDisplay.draw_circle(camera.world_to_screen(self.water_orb_average_pos), 10, "yellow")
 		self.water_orb_group.draw(self.outline_draw_surface, self.water_draw_surfaces, camera)
 
 	def draw_ui(self, surface: pygame.Surface, camera: pygbase.Camera):
@@ -229,12 +226,14 @@ class WaterMonster:
 
 		for _ in range(random.randint(50, 120)):
 			offset = pygbase.utils.get_angled_vector(random.uniform(0, 360), 1)
-			self.particle_manager.add_particle(self.particle_spawner_pos + offset * random.uniform(0, 50), self.water_particle_settings, initial_velocity=offset * random.uniform(0, 200))
+			self.particle_manager.add_particle(self.water_orb_average_pos + offset * random.uniform(0, 50), self.water_particle_settings, initial_velocity=offset * random.uniform(0, 200))
 
 
 class WaterMonsterGroup:
 	def __init__(self):
 		self.water_monsters: list[WaterMonster] = []
+
+		self.monster_update_range = 1200
 
 	def get_colliders(self, pos: tuple | pygame.Vector2 | None = None, radius: int = 1000) -> list[pygame.Rect]:
 		if pos is None:
@@ -242,7 +241,7 @@ class WaterMonsterGroup:
 		else:
 			return [water_monster.rect for water_monster in self.water_monsters if water_monster.pos.distance_to(pos) < radius]
 
-	def get_monsters(self, pos: tuple | pygame.Vector2 | None = None, radius: int = 1000) -> list[WaterMonster]:
+	def get_monsters(self, pos: tuple | pygame.Vector2 | None = None, radius: int = 800) -> list[WaterMonster]:
 		if pos is None:
 			return self.water_monsters
 		else:
@@ -250,7 +249,7 @@ class WaterMonsterGroup:
 
 	def update(self, delta: float, pos: tuple | pygame.Vector2, particle_colliders: list[pygame.geometry.Circle], camera: pygbase.Camera):
 		for water_monster in self.water_monsters:
-			in_range = water_monster.pos.distance_to(pos) < 1000
+			in_range = water_monster.pos.distance_to(pos) < self.monster_update_range
 
 			if in_range:
 				water_monster.update(delta, pos)

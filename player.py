@@ -64,7 +64,7 @@ class Player:
 		self.level_colliders = self.level.get_colliders()
 
 		self.temperature = Temperature(self.pos, offset=(0, -self.rect.height * 1.2), cooling_speed=15).link_pos(self.pos)
-		gun_duration_secs = 30
+		gun_duration_secs = 3
 		self.gun_heat = (self.temperature.cooling_speed + self.temperature.max_temperature / gun_duration_secs)
 
 		self.can_fire = True

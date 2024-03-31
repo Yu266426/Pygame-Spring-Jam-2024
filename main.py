@@ -8,7 +8,7 @@ from editor import Editor
 from files import ASSET_DIR
 from game import Game
 
-DEBUG = False
+DEBUG = True
 DO_PROFILE = False
 
 if __name__ == '__main__':
@@ -26,7 +26,7 @@ if __name__ == '__main__':
 		"flamethrower",
 		[(249, 194, 43), (245, 125, 74), (234, 79, 54), (251, 107, 29), (232, 59, 59)],
 		(6, 12),
-		(2, 3),
+		(5, 8),
 		(0.2, 1),
 		(0, 10),
 		True,
@@ -36,7 +36,7 @@ if __name__ == '__main__':
 		"fire",
 		[(249, 194, 43), (245, 125, 74), (234, 79, 54), (251, 107, 29), (232, 59, 59)],
 		(6, 12),
-		(5, 8),
+		(7, 10),
 		(0, 1),
 		(0, -2),
 		True,
@@ -46,9 +46,9 @@ if __name__ == '__main__':
 		"smoke",
 		[(10 * i, 10 * i, 10 * i) for i in range(7, 10)],
 		(3, 10),
-		(7, 10),
+		(9, 12),
 		(0, 0),
-		(0, -5),
+		(0, -9),
 		True,
 		((0.0, 0.1), (0.0, 0.4))
 	)
