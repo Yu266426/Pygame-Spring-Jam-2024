@@ -8,7 +8,7 @@ from editor import Editor
 from files import ASSET_DIR
 from game import Game
 
-DEBUG = True
+DEBUG = False
 DO_PROFILE = False
 
 if __name__ == '__main__':
@@ -108,9 +108,11 @@ if __name__ == '__main__':
 
 		profiler.dump_stats("stats3.prof")
 	else:
-		if "-game" in cl_args:
+		if "-game" in cl_args:  # Skip menu
 			pygbase.App(Game).run()
 		elif "-editor" in cl_args:
 			pygbase.App(Editor).run()
+		else:
+			pygbase.App(Game).run()
 
 	pygbase.quit()

@@ -5,11 +5,19 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5e716f3a-44ea-42ac-ba11-3585d3b1504c" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/art/.road_end_right_dirt.kra-autosave.kra" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/art/deep_road_bottom_right_end_dirt_1.kra" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/art/deep_road_right_end_dirt_1.kra" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/art/road_end_right_dirt.kra" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/tiles/deep_road_bottom_right_end_dirt_1.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/tiles/deep_road_right_end_dirt_1.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/tiles/road_end_right_dirt.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/levels/level.json" beforeDir="false" afterPath="$PROJECT_DIR$/assets/levels/level.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/tiles/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/assets/tiles/config.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor.py" beforeDir="false" afterPath="$PROJECT_DIR$/editor.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/player.py" beforeDir="false" afterPath="$PROJECT_DIR$/player.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tile.py" beforeDir="false" afterPath="$PROJECT_DIR$/tile.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/water_monster.py" beforeDir="false" afterPath="$PROJECT_DIR$/water_monster.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -108,7 +116,7 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/main.py" />
-      <option name="PARAMETERS" value="-game" />
+      <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />

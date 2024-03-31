@@ -309,12 +309,13 @@ class Editor(pygbase.GameState, name="editor"):
 							self.get_mouse_tile_pos()[1] * self.tile_size[1]
 						))
 
+						parallax_factor = (1 + self.level.get_parallax_layer(self.get_current_tile_layer()) * self.level.parallax_amount)
 						screen_pos = (
-							(screen_pos[0] + self.screen_size[0] / 2) * (1 - self.level.get_parallax_layer(self.get_current_tile_layer() * self.level.parallax_amount)) + self.screen_size[0] / 2,
-							(screen_pos[1] + self.screen_size[1] / 2) * (1 - self.level.get_parallax_layer(self.get_current_tile_layer() * self.level.parallax_amount)) + self.screen_size[1] / 2
+							(screen_pos[0] - self.screen_size[0] / 2) * parallax_factor + self.screen_size[0] / 2,
+							(screen_pos[1] - self.screen_size[1] / 2) * parallax_factor + self.screen_size[1] / 2
 						)  # TODO: Fix
 
-						print(screen_pos)
+						print(screen_pos, parallax_factor)
 
 						pygame.draw.rect(surface, "red", (screen_pos, tile_size), width=2)
 				case "Sheet":

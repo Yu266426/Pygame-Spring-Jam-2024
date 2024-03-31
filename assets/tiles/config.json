@@ -15,7 +15,15 @@
     "scale": 4,
     "rotatable": false
   },
+  "deep_road_bottom_right_end_dirt_1": {
+    "scale": 4,
+    "rotatable": false
+  },
   "deep_road_left_end_dirt_1": {
+    "scale": 4,
+    "rotatable": false
+  },
+  "deep_road_right_end_dirt_1": {
     "scale": 4,
     "rotatable": false
   },
@@ -48,6 +56,10 @@
     "rotatable": false
   },
   "road_end_left_dirt": {
+    "scale": 4,
+    "rotatable": false
+  },
+  "road_end_right_dirt": {
     "scale": 4,
     "rotatable": false
   }
