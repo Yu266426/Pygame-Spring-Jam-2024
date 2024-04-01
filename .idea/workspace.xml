@@ -5,19 +5,19 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5e716f3a-44ea-42ac-ba11-3585d3b1504c" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/health_bar.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/art/.player_swim.kra-autosave.kra" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/art/clam_boss.kra" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/sprite_sheets/clam_boss_idle.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/sprite_sheets/clam_boss_slam.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/assets/levels/level.json" beforeDir="false" afterPath="$PROJECT_DIR$/assets/levels/level.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/levels/level_progress.json" beforeDir="false" afterPath="$PROJECT_DIR$/assets/levels/level_progress.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/sprite_sheets/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/assets/sprite_sheets/config.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/boss.py" beforeDir="false" afterPath="$PROJECT_DIR$/boss.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/editor.py" beforeDir="false" afterPath="$PROJECT_DIR$/editor.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/game.py" beforeDir="false" afterPath="$PROJECT_DIR$/game.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/health.py" beforeDir="false" afterPath="$PROJECT_DIR$/health.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/level.py" beforeDir="false" afterPath="$PROJECT_DIR$/level.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/player.py" beforeDir="false" afterPath="$PROJECT_DIR$/player.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/stats.prof" beforeDir="false" afterPath="$PROJECT_DIR$/stats.prof" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/stats2.prof" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/stats3.prof" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/water_monster.py" beforeDir="false" afterPath="$PROJECT_DIR$/water_monster.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

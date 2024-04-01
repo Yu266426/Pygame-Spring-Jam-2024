@@ -63,6 +63,16 @@ if __name__ == '__main__':
 		((0.0, 0.1), (0.0, 0.4))
 	)
 	pygbase.add_particle_setting(
+		"polluted_water",
+		[(152, 143, 100), (92, 93, 65), (53, 63, 35)],
+		(5, 11),
+		(5, 8),
+		(4, 0),
+		(0, 5),
+		False,
+		((0.0, 0.1), (0.0, 0.4))
+	)
+	pygbase.add_particle_setting(
 		"water_vapour",
 		["light blue"],
 		(5, 8),
@@ -118,7 +128,8 @@ if __name__ == '__main__':
 	pygbase.Common.set_value("tile_size", (16 * tile_scale, 16 * tile_scale))
 	pygbase.Common.set_value("gravity", 1600)
 
-	water_monster_colors = ("blue", "light blue", "dark blue")
+	# water_monster_colors = ("blue", "light blue", "dark blue")
+	water_monster_colors = ((152, 143, 100), (92, 93, 65), (53, 63, 35))
 	pygbase.Common.set_value("water_monster_colors", water_monster_colors)
 	pygbase.Common.set_value("water_alpha", 100)
 

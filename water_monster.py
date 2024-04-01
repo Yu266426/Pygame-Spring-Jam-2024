@@ -123,7 +123,7 @@ class WaterMonster:
 
 		self.particle_manager = particle_manager
 		self.water_particle_spawner = particle_manager.add_spawner(
-			pygbase.CircleSpawner(self.pos, 0.1, 4, 30, False, "water", particle_manager, radial_velocity_range=(0, 100))
+			pygbase.CircleSpawner(self.pos, 0.1, 4, 30, False, "polluted_water", particle_manager, radial_velocity_range=(0, 100))
 		).link_pos(self.water_orb_average_pos)
 		self.death_water_particle_settings = pygbase.Common.get_particle_setting("water_vapour")
 

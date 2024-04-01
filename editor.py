@@ -313,9 +313,9 @@ class Editor(pygbase.GameState, name="editor"):
 					if pygbase.InputManager.get_mouse_just_pressed(0):
 						if self.current_entity_mode.get_current_text() == "player":
 							if pygbase.InputManager.check_modifiers(pygame.KMOD_SHIFT):
-								self.level.player_spawn_pos = (self.get_mouse_pos()[0], self.get_mouse_tile_pos()[1] * self.level.tile_size[1])
+								self.level.level_player_spawn_pos = (self.get_mouse_pos()[0], self.get_mouse_tile_pos()[1] * self.level.tile_size[1])
 							else:
-								self.level.player_spawn_pos = tuple(self.get_mouse_pos())
+								self.level.level_player_spawn_pos = tuple(self.get_mouse_pos())
 
 						elif self.current_entity_mode.get_current_text() == "w_monster":
 							if pygbase.InputManager.check_modifiers(pygame.KMOD_SHIFT):

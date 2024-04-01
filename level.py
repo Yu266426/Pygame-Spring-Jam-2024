@@ -320,7 +320,7 @@ class Level:
 			for tile in layer.values():
 				tile.editor_draw(surface, camera)
 
-		pygame.draw.circle(surface, "yellow", camera.world_to_screen(self.get_player_spawn_pos()), 50, width=5)
+		pygame.draw.circle(surface, "yellow", camera.world_to_screen(self.level_player_spawn_pos), 50, width=5)
 
 		for water_monster_spawn_pos in self.water_enemy_spawn_locations:
 			pygame.draw.circle(surface, "light blue", camera.world_to_screen(water_monster_spawn_pos), 40, width=5)

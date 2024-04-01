@@ -1,4 +1,20 @@
 {
+  "clam_boss_idle": {
+    "rows": 1,
+    "columns": 1,
+    "tile_width": 48,
+    "tile_height": 32,
+    "scale": 0,
+    "rotatable": false
+  },
+  "clam_boss_slam": {
+    "rows": 1,
+    "columns": 16,
+    "tile_width": 48,
+    "tile_height": 32,
+    "scale": 0,
+    "rotatable": false
+  },
   "player_idle": {
     "rows": 1,
     "columns": 4,
