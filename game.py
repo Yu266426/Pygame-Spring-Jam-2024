@@ -104,9 +104,9 @@ class Game(pygbase.GameState, name="game"):
 			self.heart_of_the_sea.update(delta)
 
 		if self.player.pos.distance_to(self.heart_of_the_sea.pos) < 700:
-			self.camera.lerp_to_target(((self.player.pos * 2 + self.heart_of_the_sea.pos) / 3) - pygame.Vector2(pygbase.Common.get_value("screen_size")) / 2, 2 * delta)
+			self.camera.lerp_to_target(((pygame.Vector2(self.player.rect.center) * 2 + self.heart_of_the_sea.pos) / 3) - pygame.Vector2(pygbase.Common.get_value("screen_size")) / 2, 2 * delta)
 		else:
-			self.camera.lerp_to_target(self.player.pos - pygame.Vector2(pygbase.Common.get_value("screen_size")) / 2, 3 * delta)
+			self.camera.lerp_to_target(self.player.rect.center - pygame.Vector2(pygbase.Common.get_value("screen_size")) / 2, 3 * delta)
 
 		if self.player.gun_water_to_land:
 			self.collision_particle_group.particle_settings = self.flamethrower_particle_settings
