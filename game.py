@@ -5,6 +5,7 @@ import pygame
 import pygbase
 
 from boss import HeartOfTheSeaBoss
+from health_bar import HealthBar
 from level import Level
 from particle_collider import CollisionParticleGroup
 from player import Player
@@ -27,6 +28,8 @@ class Game(pygbase.GameState, name="game"):
 
 		self.particle_manager = pygbase.ParticleManager(chunk_size=pygbase.Common.get_value("tile_size")[0])  # NoQA
 		self.in_water_particle_manager = pygbase.ParticleManager(chunk_size=pygbase.Common.get_value("tile_size")[0])
+
+		# TODO: Spawn appropriate enemies based on player checkpoint
 		self.level = Level(self.particle_manager, self.in_water_particle_manager, self.lighting_manager)
 		self.projectile_group = ProjectileGroup(self.level)
 
@@ -49,13 +52,15 @@ class Game(pygbase.GameState, name="game"):
 		self.boiling_water_particle_settings = pygbase.Common.get_particle_setting("boiling_water")
 		self.water_vapour_particle_settings = pygbase.Common.get_particle_setting("water_vapour")
 
-		self.camera.set_pos(self.level.player_spawn_pos - pygame.Vector2(pygbase.Common.get_value("screen_size")) / 2)
-		self.player = Player(self.level.player_spawn_pos, self.level, self.camera, self.particle_manager, self.in_water_particle_manager, self.collision_particle_group)
+		self.camera.set_pos(self.level.get_player_spawn_pos() - pygame.Vector2(pygbase.Common.get_value("screen_size")) / 2)
+		self.player = Player(self.level.get_player_spawn_pos(), self.level, self.camera, self.particle_manager, self.in_water_particle_manager, self.collision_particle_group)
+		self.player_health_bar = HealthBar((20, 20), (260, 50), self.player.health)
 
 		self.heart_of_the_sea = HeartOfTheSeaBoss(self.level.heart_of_the_sea_pos)
 
 	def update(self, delta: float):
-		self.level.update(delta, self.player.pos)
+		if self.level.update(delta, self.player.pos):
+			self.camera.shake_screen(0.3)
 
 		self.camera.tick(delta)
 
@@ -112,6 +117,11 @@ class Game(pygbase.GameState, name="game"):
 			self.collision_particle_group.colliders = self.in_water_particle_colliders
 			self.collision_particle_group.particles.clear()
 
+		if not self.player.health.alive():
+			self.player.kill()
+
+			self.set_next_state(pygbase.FadeTransition(self, Game(), 1.0, (0, 0, 0)))
+
 	# if pygbase.InputManager.get_key_pressed(pygame.K_p):
 	# 	mouse_pos = self.camera.screen_to_world(pygame.mouse.get_pos())
 	# 	towards_player_vec = self.player.pos - mouse_pos
@@ -148,3 +158,5 @@ class Game(pygbase.GameState, name="game"):
 			water_monster.draw_ui(surface, self.camera)
 
 		self.player.draw_ui(surface, self.camera)
+
+		self.player_health_bar.draw(surface)

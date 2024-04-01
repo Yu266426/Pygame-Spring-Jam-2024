@@ -120,6 +120,13 @@ class Player:
 		else:
 			return self.water_rect
 
+	def kill(self):
+		self.on_land_particle_manager.remove_spawner(self.flamethrower_spawner)
+		self.on_land_particle_manager.remove_spawner(self.gun_tip_fire_spawner)
+		self.in_water_particle_manager.remove_spawner(self.boiling_water_spawner)
+		self.in_water_particle_manager.remove_spawner(self.gun_tip_water_spawner)
+		self.in_water_particle_manager.remove_spawner(self.breath_bubbles_spawner)
+
 	def ground_movement(self, delta):
 		is_water_animation = self.animation.current_state == "swim"
 

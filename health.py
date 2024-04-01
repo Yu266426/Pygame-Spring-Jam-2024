@@ -9,5 +9,8 @@ class Health:
 	def heal(self, amount: int):
 		self.health = min(self.health + amount, self.max_health)
 
-	def alive(self):
+	def get_percentage(self) -> float:
+		return self.health / self.max_health
+
+	def alive(self) -> bool:
 		return self.health > 0

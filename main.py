@@ -17,7 +17,7 @@ if __name__ == '__main__':
 	if "-game" in cl_args and "-editor" in cl_args:
 		raise ValueError("`-game` and `-editor` are mutually exclusive")
 
-	pygbase.init((1000, 800), max_light_radius=300)
+	pygbase.init((900, 700), max_light_radius=300)
 
 	if DEBUG:
 		pygbase.DebugDisplay.show()
@@ -149,7 +149,7 @@ if __name__ == '__main__':
 		pygbase.App(Game).run()
 		profiler.disable()
 
-		profiler.dump_stats("stats3.prof")
+		profiler.dump_stats("stats.prof")
 	else:
 		if "-game" in cl_args:  # Skip menu
 			pygbase.App(Game).run()

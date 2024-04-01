@@ -352,6 +352,8 @@ class Editor(pygbase.GameState, name="editor"):
 							if self.get_mouse_pos().distance_to(checkpoint[0]) < 80:
 								self.level.checkpoint_data.remove(checkpoint)
 
+						self.latest_checkpoint_id = max(self.level.checkpoints.keys()) + 1 if len(self.level.checkpoints) > 0 else 0
+
 			self.prev_mouse_tile_pos = self.get_mouse_tile_pos()
 
 	def draw(self, surface: pygame.Surface):
@@ -370,9 +372,9 @@ class Editor(pygbase.GameState, name="editor"):
 				else:
 					self.level.single_layer_editor_draw(surface, self.camera_controller.camera, self.get_current_tile_layer())
 			case "Entity":
-				self.level.entity_editor_draw(surface, self.camera_controller.camera)
+				self.level.editor_draw(surface, self.camera_controller.camera)
 			case "Checkpoint":
-				self.level.checkpoint_editor_draw(surface, self.camera_controller.camera)
+				self.level.editor_draw(surface, self.camera_controller.camera)
 			case "View":
 				self.level.draw(surface, self.camera_controller.camera, [], 0)
 				self.lighting_manager.draw(surface, self.camera_controller.camera)

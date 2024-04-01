@@ -52,12 +52,11 @@ class Level:
 		self.checkpoints = {checkpoint_id: (pygame.geometry.Circle(pos, 80)) for pos, checkpoint_id in self.checkpoint_data}
 		self.checkpoint_lights = {}
 
+		self.lighting_manager = lighting_manager
 		for pos, checkpoint_id in self.checkpoint_data:
 			self.checkpoint_lights[checkpoint_id] = lighting_manager.add_light(pygbase.Light(
 				pos, 1.2, 80, random.uniform(4, 7), random.uniform(2, 3), tint=(255, 255, 200)
 			))
-
-		self.player_on_checkpoint = False
 
 		self.current_player_checkpoint_id = -1
 		self.load_progress()
@@ -65,9 +64,13 @@ class Level:
 		if self.current_player_checkpoint_id != -1:
 			self.checkpoint_lights[self.current_player_checkpoint_id].set_brightness(1.4)
 
-			self.player_spawn_pos = self.checkpoints[self.current_player_checkpoint_id].center
+		self.player_on_checkpoint = False
+
+	def get_player_spawn_pos(self) -> tuple[float, float]:
+		if self.current_player_checkpoint_id != -1:
+			return self.checkpoints[self.current_player_checkpoint_id].center
 		else:
-			self.player_spawn_pos = (0, 0)
+			return 0, 0
 
 	@classmethod
 	def init_save_file(cls, path: pathlib.Path):
@@ -259,8 +262,12 @@ class Level:
 					offset = pygbase.utils.get_angled_vector(random.uniform(0, -360), 1)
 					self.particle_manager.add_particle(collided_checkpoint_pos + offset * random.uniform(0, 50), self.checkpoint_particles, initial_velocity=offset * random.uniform(200, 400))
 
+			return True
+
 		elif not player_checkpoint_collision:
 			self.player_on_checkpoint = False
+
+		return False
 
 	def draw(self, surface: pygame.Surface, camera: pygbase.Camera, entities: list, entity_layer: int, exclude_layers: set[int] | None = None):
 		exclude_layers = {} if exclude_layers is None else exclude_layers
@@ -308,22 +315,17 @@ class Level:
 				if tile is not None:
 					tile.draw(surface, camera)
 
-	def entity_editor_draw(self, surface: pygame.Surface, camera: pygbase.Camera):
+	def editor_draw(self, surface: pygame.Surface, camera: pygbase.Camera):
 		for layer_index, layer in sorted(self.tiles.items(), key=lambda e: e[0]):
 			for tile in layer.values():
 				tile.editor_draw(surface, camera)
 
-		pygame.draw.circle(surface, "yellow", camera.world_to_screen(self.player_spawn_pos), 50, width=5)
+		pygame.draw.circle(surface, "yellow", camera.world_to_screen(self.get_player_spawn_pos()), 50, width=5)
 
 		for water_monster_spawn_pos in self.water_enemy_spawn_locations:
 			pygame.draw.circle(surface, "light blue", camera.world_to_screen(water_monster_spawn_pos), 40, width=5)
 
 		pygame.draw.circle(surface, "light blue", camera.world_to_screen(self.heart_of_the_sea_pos), 400, width=10)
-
-	def checkpoint_editor_draw(self, surface: pygame.Surface, camera: pygbase.Camera):
-		for layer_index, layer in sorted(self.tiles.items(), key=lambda e: e[0]):
-			for tile in layer.values():
-				tile.editor_draw(surface, camera)
 
 		for checkpoint in self.checkpoint_data:
 			pygame.draw.circle(surface, "light blue", camera.world_to_screen(checkpoint[0]), 80, width=5)
