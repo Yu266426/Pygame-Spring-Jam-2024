@@ -1,4 +1,5 @@
 import enum
+import logging.handlers
 import random
 
 import pygame
@@ -247,11 +248,15 @@ class WaterMonster:
 		match attack:
 			case WaterMonsterAttacks.GARBAGE_THROW:
 				if self.garbage_throw_timer.done():
-					initial_x_velocity = towards_player_vec.normalize().x * random.uniform(400, 600)
-					throw_vec = pygame.Vector2(
-						initial_x_velocity,
-						-((0.5 * self.gravity * (towards_player_vec.x ** 2) / initial_x_velocity) - towards_player_vec.y * initial_x_velocity) / towards_player_vec.x
-					)
+					if self.water_orb_average_pos.y > self.water_level:
+						throw_vec = towards_player_vec.normalize() * random.uniform(600, 800)
+					else:
+						initial_x_velocity = towards_player_vec.normalize().x * random.uniform(400, 600)
+						throw_vec = pygame.Vector2(
+							initial_x_velocity,
+							-((0.5 * self.gravity * (towards_player_vec.x ** 2) / initial_x_velocity) - towards_player_vec.y * initial_x_velocity) / towards_player_vec.x
+						)
+
 					self.projectile_group.add_projectile(GarbageProjectile(self.water_orb_average_pos, throw_vec))
 
 					self.garbage_throw_timer.set_cooldown(random.uniform(*self.garbage_throw_cooldown_range))

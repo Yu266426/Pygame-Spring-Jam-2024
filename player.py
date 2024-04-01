@@ -5,11 +5,10 @@ import pygame.geometry
 import pygbase
 
 from health import Health
-from temperature import Temperature
-from utils import get_sign
-
 from level import Level
 from particle_collider import CollisionParticleGroup
+from temperature import Temperature
+from utils import get_sign
 
 
 class Player:
@@ -71,9 +70,14 @@ class Player:
 
 		self.water_splash_particle_settings = pygbase.Common.get_particle_setting("water_splash")
 
+		self.fire_particle_settings = pygbase.Common.get_particle_setting("fire")
+		self.smoke_particle_settings = pygbase.Common.get_particle_setting("smoke")
+		self.water_vapour_particle_settings = pygbase.Common.get_particle_setting("water_vapour")
+
 		self.fire_gun_offset_land = (0, -60)
 		self.fire_gun_offset_water = (0, -20)
 		self.fire_gun_offset = self.fire_gun_offset_land
+		self.prev_fire_gun_offset = self.fire_gun_offset
 		self.particle_spawner_towards_mouse_offset = 32
 		self.particle_spawner_pos = self.pos + self.fire_gun_offset
 		self.head_pos = self.pos.copy()
@@ -271,8 +275,6 @@ class Player:
 		self.gun_water_to_land = False
 
 		self.temperature.tick(delta)
-		if self.temperature.get_percentage() < 0.8:
-			self.can_fire = True
 
 		self.collision_particle_timer.tick(delta)
 
@@ -348,16 +350,27 @@ class Player:
 					(offset.x * 100, abs(offset.y) * -500)
 				)
 
-		if self.prev_pos.y + self.fire_gun_offset[1] <= self.water_level < self.pos.y + self.fire_gun_offset[1]:
+		prev_gun_tip_pos = self.prev_pos + self.prev_fire_gun_offset + pygbase.utils.get_angled_vector(angle_to_mouse, self.particle_spawner_towards_mouse_offset)
+		gun_tip_pos = self.pos + self.fire_gun_offset + pygbase.utils.get_angled_vector(angle_to_mouse, self.particle_spawner_towards_mouse_offset)
+		if prev_gun_tip_pos.y <= self.water_level < gun_tip_pos.y:
 			self.gun_land_to_water = True
 			self.flamethrower_spawner.active = False
 			self.gun_tip_fire_spawner.active = False
-		elif self.prev_pos.y + self.fire_gun_offset[1] > self.water_level >= self.pos.y + self.fire_gun_offset[1]:
+			self.boiling_water_spawner.active = False
+			self.gun_tip_water_spawner.active = False
+			self.gun_tip_fire_spawner.amount = 3
+			self.gun_tip_water_spawner.amount = 3
+
+		elif prev_gun_tip_pos.y > self.water_level >= gun_tip_pos.y:
 			self.gun_water_to_land = True
 			self.boiling_water_spawner.active = False
 			self.gun_tip_water_spawner.active = False
+			self.flamethrower_spawner.active = False
+			self.gun_tip_fire_spawner.active = False
+			self.gun_tip_water_spawner.amount = 3
+			self.gun_tip_fire_spawner.amount = 3
 
-		if self.water_level < self.pos.y + self.fire_gun_offset[1]:
+		if self.water_level < gun_tip_pos.y:
 			stream_spawner = self.boiling_water_spawner
 			tip_spawner = self.gun_tip_water_spawner
 			fire_deviation = self.fire_angle_deviation * 3
@@ -365,6 +378,10 @@ class Player:
 			stream_spawner = self.flamethrower_spawner
 			tip_spawner = self.gun_tip_fire_spawner
 			fire_deviation = self.fire_angle_deviation
+
+		if self.temperature.get_percentage() < 0.8:
+			self.can_fire = True
+			self.gun_tip_fire_spawner.particle_settings = self.fire_particle_settings
 
 		if pygbase.InputManager.get_mouse_pressed(0) and self.can_fire:
 			stream_spawner.angle_range = (angle_to_mouse - fire_deviation, angle_to_mouse + fire_deviation)
@@ -387,8 +404,20 @@ class Player:
 		else:
 			stream_spawner.active = False
 			tip_spawner.active = False
+			tip_spawner.amount = 3
+
+			self.boiling_water_spawner.active = False
+			self.gun_tip_water_spawner.active = False
+			self.flamethrower_spawner.active = False
+			self.gun_tip_fire_spawner.active = False
+
+		if self.temperature.get_percentage() > 0.8:
+			self.gun_tip_fire_spawner.particle_settings = self.smoke_particle_settings
+			tip_spawner.amount = 8
+			tip_spawner.active = True
 
 		self.prev_pos = self.pos.copy()
+		self.prev_fire_gun_offset = self.fire_gun_offset
 
 	def draw(self, surface: pygame.Surface, camera: pygbase.Camera):
 		self.animation.draw_at_pos(surface, self.pos, camera, flip=(self.flip_x, False), draw_pos="midbottom")

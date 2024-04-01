@@ -1,3 +1,4 @@
+import logging
 import random
 
 import pygame
@@ -7,7 +8,7 @@ from boss import HeartOfTheSeaBoss
 from level import Level
 from particle_collider import CollisionParticleGroup
 from player import Player
-from projectiles import ProjectileGroup
+from projectiles import ProjectileGroup, GarbageProjectile
 from water_monster import WaterMonster, WaterMonsterGroup
 
 
@@ -60,7 +61,7 @@ class Game(pygbase.GameState, name="game"):
 
 		hits = self.projectile_group.update(delta, [self.player.rect])
 		for hit in hits:
-			if hit[0].colliderect(self.player.ground_rect):
+			if hit[0].colliderect(self.player.rect):
 				self.player.health.damage(hit[1])
 
 				self.camera.shake_screen(0.3)
@@ -103,6 +104,13 @@ class Game(pygbase.GameState, name="game"):
 			self.collision_particle_group.particle_settings = self.boiling_water_particle_settings
 			self.collision_particle_group.colliders = self.in_water_particle_colliders
 			self.collision_particle_group.particles.clear()
+
+		# if pygbase.InputManager.get_key_pressed(pygame.K_p):
+		# 	mouse_pos = self.camera.screen_to_world(pygame.mouse.get_pos())
+		# 	towards_player_vec = self.player.pos - mouse_pos
+		# 	throw_vec = towards_player_vec.normalize() * random.uniform(600, 800)
+		#
+		# 	self.projectile_group.add_projectile(GarbageProjectile(mouse_pos, throw_vec))
 
 	def draw(self, surface: pygame.Surface):
 		surface.fill((150, 180, 223))

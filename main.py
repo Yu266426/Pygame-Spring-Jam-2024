@@ -17,7 +17,7 @@ if __name__ == '__main__':
 	if "-game" in cl_args and "-editor" in cl_args:
 		raise ValueError("`-game` and `-editor` are mutually exclusive")
 
-	pygbase.init((1200, 800), max_light_radius=0)
+	pygbase.init((1000, 800), max_light_radius=0)
 
 	if DEBUG:
 		pygbase.DebugDisplay.show()

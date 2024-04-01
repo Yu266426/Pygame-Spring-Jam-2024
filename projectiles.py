@@ -1,3 +1,4 @@
+import logging
 import random
 
 import pygame
@@ -11,12 +12,14 @@ from level import Level
 class Projectile:
 	def __init__(self, pos: tuple | pygame.Vector2, initial_velocity: tuple | pygame.Vector2, radius: float, damage: int, despawn_time: float = 3.0, bounce: tuple[float, float] = (0.5, 0.2)):
 		self.gravity = pygbase.Common.get_value("gravity")
+		self.water_lever = pygbase.Common.get_value("water_level")
 
 		self.max_speed_x = 10000
 		self.max_speed_y = 10000
 
 		self.on_ground = False
 		self.ground_damping = 5.0
+		self.water_damping = 1.0
 
 		self.bounce = bounce
 
@@ -35,6 +38,8 @@ class Projectile:
 	def movement(self, delta, colliders: list[pygame.Rect]):
 		if self.on_ground:
 			self.acceleration.x = -self.velocity.x * self.ground_damping
+		elif self.pos.y > self.water_lever:
+			self.acceleration.x = -self.velocity.x * self.water_damping
 		else:
 			self.acceleration.x = 0
 
@@ -69,7 +74,10 @@ class Projectile:
 
 		# Y movement
 		# Upwards has less gravity than downwards
-		self.acceleration.y = self.gravity
+		if self.pos.y > self.water_lever:
+			self.acceleration.y = -self.velocity.y * self.water_damping
+		else:
+			self.acceleration.y = self.gravity
 
 		self.velocity.y += self.acceleration.y * delta
 		self.velocity.y = pygame.math.clamp(self.velocity.y, -self.max_speed_y, self.max_speed_y)
@@ -149,7 +157,7 @@ class ProjectileGroup:
 
 			# print(projectile, projectile.has_collided, projectile.has_just_collided)
 			if projectile.has_just_collided:
-				hits.append((pygame.geometry.Circle(projectile.collider.center, projectile.collider.radius * 1.5), projectile.damage))
+				hits.append((pygame.geometry.Circle(projectile.collider.center, projectile.collider.radius * 2), projectile.damage))
 
 		self.projectiles[:] = [projectile for projectile in self.projectiles if projectile.alive()]
 
