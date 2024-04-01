@@ -16,6 +16,8 @@ class Game(pygbase.GameState, name="game"):
 	def __init__(self):
 		super().__init__()
 
+		self.lighting_manager = pygbase.LightingManager(1.0)
+
 		self.camera = pygbase.Camera()
 		pygbase.Common.set_value("camera", self.camera)
 
@@ -23,10 +25,13 @@ class Game(pygbase.GameState, name="game"):
 		self.outline_draw_surface: pygame.Surface = pygbase.Common.get_value("water_outline_surface")
 		self.water_draw_surfaces: dict[str | tuple, pygame.Surface] = pygbase.Common.get_value("water_surfaces")
 
-		self.level = Level()
-		self.particle_manager = pygbase.ParticleManager(chunk_size=pygbase.Common.get_value("tile_size")[0], colliders=(*self.level.get_colliders(), *self.level.get_colliders(1)))  # NoQA
-		self.in_water_particle_manager = pygbase.ParticleManager(chunk_size=pygbase.Common.get_value("tile_size")[0], colliders=self.level.get_colliders())
+		self.particle_manager = pygbase.ParticleManager(chunk_size=pygbase.Common.get_value("tile_size")[0])  # NoQA
+		self.in_water_particle_manager = pygbase.ParticleManager(chunk_size=pygbase.Common.get_value("tile_size")[0])
+		self.level = Level(self.particle_manager, self.in_water_particle_manager, self.lighting_manager)
 		self.projectile_group = ProjectileGroup(self.level)
+
+		self.particle_manager.generate_chunked_colliders((*self.level.get_colliders(), *self.level.get_colliders(1)))
+		self.in_water_particle_manager.generate_chunked_colliders(self.level.get_colliders())
 
 		self.water_monster_group = WaterMonsterGroup()
 		for spawn_pos in self.level.water_enemy_spawn_locations:
@@ -50,6 +55,8 @@ class Game(pygbase.GameState, name="game"):
 		self.heart_of_the_sea = HeartOfTheSeaBoss(self.level.heart_of_the_sea_pos)
 
 	def update(self, delta: float):
+		self.level.update(delta, self.player.pos)
+
 		self.camera.tick(delta)
 
 		water_monster_colliders = self.water_monster_group.get_colliders(self.player.pos)
@@ -88,10 +95,10 @@ class Game(pygbase.GameState, name="game"):
 
 		self.player.update(delta)
 
-		if self.player.pos.distance_to(self.heart_of_the_sea.pos) < 700:
+		if self.player.pos.distance_to(self.heart_of_the_sea.pos) < 1000:
 			self.heart_of_the_sea.update(delta)
 
-		if self.player.pos.distance_to(self.heart_of_the_sea.pos) < 400:
+		if self.player.pos.distance_to(self.heart_of_the_sea.pos) < 700:
 			self.camera.lerp_to_target(((self.player.pos * 2 + self.heart_of_the_sea.pos) / 3) - pygame.Vector2(pygbase.Common.get_value("screen_size")) / 2, 2 * delta)
 		else:
 			self.camera.lerp_to_target(self.player.pos - pygame.Vector2(pygbase.Common.get_value("screen_size")) / 2, 3 * delta)
@@ -105,12 +112,12 @@ class Game(pygbase.GameState, name="game"):
 			self.collision_particle_group.colliders = self.in_water_particle_colliders
 			self.collision_particle_group.particles.clear()
 
-		# if pygbase.InputManager.get_key_pressed(pygame.K_p):
-		# 	mouse_pos = self.camera.screen_to_world(pygame.mouse.get_pos())
-		# 	towards_player_vec = self.player.pos - mouse_pos
-		# 	throw_vec = towards_player_vec.normalize() * random.uniform(600, 800)
-		#
-		# 	self.projectile_group.add_projectile(GarbageProjectile(mouse_pos, throw_vec))
+	# if pygbase.InputManager.get_key_pressed(pygame.K_p):
+	# 	mouse_pos = self.camera.screen_to_world(pygame.mouse.get_pos())
+	# 	towards_player_vec = self.player.pos - mouse_pos
+	# 	throw_vec = towards_player_vec.normalize() * random.uniform(600, 800)
+	#
+	# 	self.projectile_group.add_projectile(GarbageProjectile(mouse_pos, throw_vec))
 
 	def draw(self, surface: pygame.Surface):
 		surface.fill((150, 180, 223))
@@ -134,6 +141,8 @@ class Game(pygbase.GameState, name="game"):
 		surface.blit(self.outline_draw_surface, (0, 0))
 
 		self.level.single_layer_draw(surface, self.camera, 1)  # Water
+
+		self.lighting_manager.draw(surface, self.camera)
 
 		for water_monster in near_water_monsters:
 			water_monster.draw_ui(surface, self.camera)

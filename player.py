@@ -12,7 +12,15 @@ from utils import get_sign
 
 
 class Player:
-	def __init__(self, pos: tuple, level: Level, camera: pygbase.Camera, on_land_particle_manager: pygbase.ParticleManager, in_water_particle_manager: pygbase.ParticleManager, collision_particle_group: CollisionParticleGroup) -> None:
+	def __init__(
+			self,
+			pos: tuple,
+			level: Level,
+			camera: pygbase.Camera,
+			on_land_particle_manager: pygbase.ParticleManager,
+			in_water_particle_manager: pygbase.ParticleManager,
+			collision_particle_group: CollisionParticleGroup
+	) -> None:
 		self.input = pygame.Vector2()
 
 		self.gravity = pygbase.Common.get_value("gravity")

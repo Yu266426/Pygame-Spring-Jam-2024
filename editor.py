@@ -16,15 +16,17 @@ class Editor(pygbase.GameState, name="editor"):
 
 		self.camera_controller = pygbase.CameraController((-400, -400))
 
-		self.level = Level()
+		self.lighting_manager = pygbase.LightingManager(1.0)
+
+		self.level = Level(None, None, self.lighting_manager)
 
 		self.ui = pygbase.UIManager()
 
 		self.mode_selector = self.ui.add_element(pygbase.TextSelectionMenu(
 			(pygbase.UIValue(10), pygbase.UIValue(10)),
-			(pygbase.UIValue(250), pygbase.UIValue(50)),
+			(pygbase.UIValue(320), pygbase.UIValue(50)),
 			"ui",
-			["Tile", "Sheet", "Entity", "View"],
+			["Tile", "Sheet", "Entity", "Checkpoint", "View"],
 			self.ui.base_container,
 			bg_colour=(40, 40, 40, 40)
 		))
@@ -49,6 +51,9 @@ class Editor(pygbase.GameState, name="editor"):
 		self.entity_editing_ui: pygbase.Frame | None = None
 		self.current_entity_mode: pygbase.TextSelectionMenu | None = None
 		self.create_entity_editing_ui()
+
+		self.latest_checkpoint_id = max(self.level.checkpoints.keys()) + 1 if len(self.level.checkpoints) > 0 else 0
+		logging.debug(f"Latest checkpoint id: {self.latest_checkpoint_id}")
 
 		self.prev_mouse_tile_pos = (0, 0)
 
@@ -277,6 +282,8 @@ class Editor(pygbase.GameState, name="editor"):
 				self.entity_editing_ui.active = False
 				self.set_active_sheet_tiles(all_false=True)
 
+				self.lighting_manager.update(delta)
+
 		if pygbase.InputManager.get_key_just_pressed(pygame.K_s) and (pygbase.InputManager.check_modifiers(pygame.KMOD_CTRL) or pygbase.InputManager.check_modifiers(pygame.KMOD_META)):
 			self.level.save()
 
@@ -328,6 +335,22 @@ class Editor(pygbase.GameState, name="editor"):
 							for pos in self.level.water_enemy_spawn_locations[:]:
 								if self.get_mouse_pos().distance_to(pos) < 40:
 									self.level.water_enemy_spawn_locations.remove(pos)
+				case "Checkpoint":
+					if pygbase.InputManager.get_mouse_just_pressed(0):
+						if pygbase.InputManager.check_modifiers(pygame.KMOD_SHIFT):
+							spawn_pos = (self.get_mouse_pos()[0], self.get_mouse_tile_pos()[1] * self.level.tile_size[1])
+						else:
+							spawn_pos = tuple(self.get_mouse_pos())
+
+						self.level.checkpoint_data.append((spawn_pos, self.latest_checkpoint_id))
+						self.latest_checkpoint_id += 1
+
+						logging.info(f"Adding checkpoint. Latest id: {self.latest_checkpoint_id}")
+
+					elif pygbase.InputManager.get_mouse_pressed(2):
+						for checkpoint in self.level.checkpoint_data[:]:
+							if self.get_mouse_pos().distance_to(checkpoint[0]) < 80:
+								self.level.checkpoint_data.remove(checkpoint)
 
 			self.prev_mouse_tile_pos = self.get_mouse_tile_pos()
 
@@ -347,11 +370,15 @@ class Editor(pygbase.GameState, name="editor"):
 				else:
 					self.level.single_layer_editor_draw(surface, self.camera_controller.camera, self.get_current_tile_layer())
 			case "Entity":
-				self.level.editor_draw(surface, self.camera_controller.camera)
+				self.level.entity_editor_draw(surface, self.camera_controller.camera)
+			case "Checkpoint":
+				self.level.checkpoint_editor_draw(surface, self.camera_controller.camera)
 			case "View":
 				self.level.draw(surface, self.camera_controller.camera, [], 0)
+				self.lighting_manager.draw(surface, self.camera_controller.camera)
 			case _:
-				self.level.editor_draw(surface, self.camera_controller.camera)
+				self.level.draw(surface, self.camera_controller.camera, [], 0)
+				self.lighting_manager.draw(surface, self.camera_controller.camera)
 
 		if not self.ui.on_ui():
 			match (self.mode_selector.get_current_text()):
@@ -383,11 +410,13 @@ class Editor(pygbase.GameState, name="editor"):
 						pygame.draw.rect(surface, "red", (self.camera_controller.camera.world_to_screen((self.get_mouse_tile_pos()[0] * self.tile_size[0], self.get_mouse_tile_pos()[1] * self.tile_size[1])), self.tile_size), width=2)
 				case "Entity":
 					pygame.draw.circle(surface, "yellow", pygame.mouse.get_pos(), 5)
+				case "Checkpoint":
+					pygame.draw.circle(surface, "yellow", pygame.mouse.get_pos(), 5)
 
 		if self.mode_selector.get_current_text() != "View":
 			# World Reference
 			center_point = self.camera_controller.camera.world_to_screen((0, 0))
-			pygame.draw.line(surface, "yellow", (0, center_point[1]), (800, center_point[1]))
+			pygame.draw.line(surface, "yellow", (0, center_point[1]), (self.screen_size[0], center_point[1]))
 
 			pygame.draw.circle(surface, "yellow", center_point, 5)
 

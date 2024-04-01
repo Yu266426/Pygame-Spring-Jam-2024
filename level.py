@@ -1,7 +1,10 @@
 import json
 import logging
+import pathlib
+import random
 
 import pygame
+import pygame.geometry
 import pygbase
 
 from files import ASSET_DIR
@@ -11,7 +14,12 @@ from tile import Tile
 class Level:
 	LEVEL_NAME = "level"
 
-	def __init__(self) -> None:
+	def __init__(self, particle_manager: pygbase.ParticleManager, in_water_particle_manager: pygbase.ParticleManager, lighting_manager: pygbase.LightingManager) -> None:
+		self.particle_manager = particle_manager
+		self.in_water_particle_manager = in_water_particle_manager
+		self.checkpoint_particles = pygbase.Common.get_particle_setting("checkpoint")
+		self.water_level = pygbase.Common.get_value("water_level")
+
 		self.tile_size = pygbase.Common.get_value("tile_size")
 		self.tiles: dict[int, dict[tuple[int, int], Tile]] = {0: {}}
 
@@ -34,25 +42,55 @@ class Level:
 			if layer not in self.parallax_layer_key:
 				raise ValueError(f"Missing parallax key for tile layer {layer}")
 
-		self.player_spawn_pos, self.water_enemy_spawn_locations, self.heart_of_the_sea_pos = self.load()
+		(
+			self.level_player_spawn_pos,
+			self.water_enemy_spawn_locations,
+			self.heart_of_the_sea_pos,
+			self.checkpoint_data
+		) = self.load()
 
-	def load(self) -> tuple[tuple, list[tuple], tuple]:
+		self.checkpoints = {checkpoint_id: (pygame.geometry.Circle(pos, 80)) for pos, checkpoint_id in self.checkpoint_data}
+		self.checkpoint_lights = {}
+
+		for pos, checkpoint_id in self.checkpoint_data:
+			self.checkpoint_lights[checkpoint_id] = lighting_manager.add_light(pygbase.Light(
+				pos, 1.2, 80, random.uniform(4, 7), random.uniform(2, 3), tint=(255, 255, 200)
+			))
+
+		self.player_on_checkpoint = False
+
+		self.current_player_checkpoint_id = -1
+		self.load_progress()
+
+		if self.current_player_checkpoint_id != -1:
+			self.checkpoint_lights[self.current_player_checkpoint_id].set_brightness(1.4)
+
+			self.player_spawn_pos = self.checkpoints[self.current_player_checkpoint_id].center
+		else:
+			self.player_spawn_pos = (0, 0)
+
+	@classmethod
+	def init_save_file(cls, path: pathlib.Path):
+		init_data = {
+			"tiles": {
+				0: {}
+			},
+			"player_spawn_pos": [0, 0],
+			"water_enemy_spawn_locations": [],
+			"heart_of_the_sea_pos": [10000, 0],
+			"checkpoints": []
+		}
+
+		with open(path, "x") as level_file:
+			level_file.write(json.dumps(init_data))
+
+	def load(self) -> tuple[tuple, list[tuple], tuple, list[tuple[tuple[float, float], int]]]:
 		file_path = ASSET_DIR / "levels" / f"{self.LEVEL_NAME}.json"
 
 		if not file_path.is_file():
-			init_data = {
-				"tiles": {
-					0: {}
-				},
-				"player_spawn_pos": [0, 0],
-				"water_enemy_spawn_locations": [],
-				"heart_of_the_sea_pos": [10000, 0]
-			}
+			self.init_save_file(file_path)
 
-			with open(file_path, "x") as level_file:
-				level_file.write(json.dumps(init_data))
-
-			return (0, 0), [], (10000, 0)
+			return (0, 0), [], (10000, 0), []
 		else:
 			with open(file_path, "r") as level_file:
 				level_data = json.load(level_file)
@@ -60,6 +98,7 @@ class Level:
 			player_spawn_pos = level_data["player_spawn_pos"] if "player_spawn_pos" in level_data else (0, 0)
 			enemy_spawn_locations = level_data["water_enemy_spawn_locations"] if "water_enemy_spawn_locations" in level_data else []
 			heart_of_the_sea_pos = level_data["heart_of_the_sea_pos"] if "heart_of_the_sea_pos" in level_data else [10000, 0]
+			checkpoints = level_data["checkpoints"] if "checkpoints" in level_data else []
 
 			for layer_index, layer in level_data["tiles"].items():
 				for str_tile_pos, tile in layer.items():
@@ -72,7 +111,7 @@ class Level:
 					else:
 						self.add_sheet_tile(tile_pos, int(layer_index), tile["sheet_name"], tile["index"])
 
-			return player_spawn_pos, enemy_spawn_locations, heart_of_the_sea_pos
+			return player_spawn_pos, enemy_spawn_locations, heart_of_the_sea_pos, checkpoints
 
 	def save(self):
 		logging.info("Saving level")
@@ -80,21 +119,12 @@ class Level:
 		file_path = ASSET_DIR / "levels" / f"{self.LEVEL_NAME}.json"
 
 		if not file_path.is_file():
-			init_data = {
-				"tiles": {
-					0: {}
-				},
-				"player_spawn_pos": [0, 0],
-				"water_enemy_spawn_locations": [],
-				"heart_of_the_sea_pos": [10000, 0]
-			}
-
-			with open(file_path, "x") as level_file:
-				level_file.write(json.dumps(init_data))
+			self.init_save_file(file_path)
 
 		else:
 			with open(file_path, "r") as level_file:
 				level_data = json.load(level_file)
+				original_data = level_data.copy()
 
 			json_tiles = {}
 			for layer_index, layer in self.tiles.items():
@@ -116,12 +146,17 @@ class Level:
 
 			level_data["tiles"] = json_tiles
 
-			level_data["player_spawn_pos"] = self.player_spawn_pos
+			level_data["player_spawn_pos"] = self.level_player_spawn_pos
 			level_data["water_enemy_spawn_locations"] = self.water_enemy_spawn_locations
 			level_data["heart_of_the_sea_pos"] = self.heart_of_the_sea_pos
+			level_data["checkpoints"] = self.checkpoint_data
 
-			with open(file_path, "w") as level_file:
-				level_file.write(json.dumps(level_data))
+			try:
+				with open(file_path, "w") as level_file:
+					level_file.write(json.dumps(level_data))
+			except:
+				with open(file_path, "w") as level_file:
+					level_file.write(json.dumps(original_data))
 
 	def get_parallax_layer(self, layer: int):
 		if layer in self.parallax_layer_key:
@@ -147,6 +182,85 @@ class Level:
 
 			if len(self.tiles[layer].keys()) == 0:
 				del self.tiles[layer]
+
+	@classmethod
+	def init_progress_file(cls, path: pathlib.Path):
+		init_data = {
+			"player_checkpoint": -1
+		}
+
+		with open(path, "x") as progress_file:
+			progress_file.write(json.dumps(init_data))
+
+	def load_progress(self):
+		progress_file_path = ASSET_DIR / "levels" / f"{self.LEVEL_NAME}_progress.json"
+
+		if not progress_file_path.is_file():
+			self.init_progress_file(progress_file_path)
+		else:
+			with open(progress_file_path, "r") as progress_file:
+				progress_data = json.load(progress_file)
+
+			self.current_player_checkpoint_id = progress_data["player_checkpoint"]
+			if self.current_player_checkpoint_id not in self.checkpoints:
+				self.current_player_checkpoint_id = -1
+
+	def save_progress(self):
+		progress_file_path = ASSET_DIR / "levels" / f"{self.LEVEL_NAME}_progress.json"
+
+		if not progress_file_path.is_file():
+			self.init_progress_file(progress_file_path)
+		else:
+			with open(progress_file_path, "r") as progress_file:
+				progress_data = json.load(progress_file)
+				original_data = progress_data.copy()
+
+			progress_data["player_checkpoint"] = self.current_player_checkpoint_id
+
+			try:
+				with open(progress_file_path, "w") as progress_file:
+					progress_file.write(json.dumps(progress_data))
+			except:
+				with open(progress_file_path, "w") as progress_file:
+					progress_file.write(json.dumps(original_data))
+
+	def update(self, delta: float, player_pos: pygame.Vector2):
+		player_checkpoint_collision = False
+		collided_checkpoint_id = -1
+		collided_checkpoint_pos = None
+
+		for checkpoint_id, checkpoint in self.checkpoints.items():
+			if checkpoint_id == self.current_player_checkpoint_id:
+				continue
+
+			if checkpoint.collidepoint(player_pos):
+				player_checkpoint_collision = True
+				collided_checkpoint_id = checkpoint_id
+				collided_checkpoint_pos = checkpoint.center
+				break
+
+		if player_checkpoint_collision and not self.player_on_checkpoint:
+			self.player_on_checkpoint = True
+
+			# Save player progress
+			self.checkpoint_lights[self.current_player_checkpoint_id].set_brightness(1.2)
+
+			self.current_player_checkpoint_id = collided_checkpoint_id
+			self.checkpoint_lights[self.current_player_checkpoint_id].set_brightness(1.4)
+
+			self.save_progress()
+
+			if player_pos.y > self.water_level:
+				for _ in range(random.randint(30, 60)):
+					offset = pygbase.utils.get_angled_vector(random.uniform(0, -360), 1)
+					self.in_water_particle_manager.add_particle(collided_checkpoint_pos + offset * random.uniform(0, 50), self.checkpoint_particles, initial_velocity=offset * random.uniform(200, 400))
+			else:
+				for _ in range(random.randint(30, 60)):
+					offset = pygbase.utils.get_angled_vector(random.uniform(0, -360), 1)
+					self.particle_manager.add_particle(collided_checkpoint_pos + offset * random.uniform(0, 50), self.checkpoint_particles, initial_velocity=offset * random.uniform(200, 400))
+
+		elif not player_checkpoint_collision:
+			self.player_on_checkpoint = False
 
 	def draw(self, surface: pygame.Surface, camera: pygbase.Camera, entities: list, entity_layer: int, exclude_layers: set[int] | None = None):
 		exclude_layers = {} if exclude_layers is None else exclude_layers
@@ -194,7 +308,7 @@ class Level:
 				if tile is not None:
 					tile.draw(surface, camera)
 
-	def editor_draw(self, surface: pygame.Surface, camera: pygbase.Camera):
+	def entity_editor_draw(self, surface: pygame.Surface, camera: pygbase.Camera):
 		for layer_index, layer in sorted(self.tiles.items(), key=lambda e: e[0]):
 			for tile in layer.values():
 				tile.editor_draw(surface, camera)
@@ -205,6 +319,14 @@ class Level:
 			pygame.draw.circle(surface, "light blue", camera.world_to_screen(water_monster_spawn_pos), 40, width=5)
 
 		pygame.draw.circle(surface, "light blue", camera.world_to_screen(self.heart_of_the_sea_pos), 400, width=10)
+
+	def checkpoint_editor_draw(self, surface: pygame.Surface, camera: pygbase.Camera):
+		for layer_index, layer in sorted(self.tiles.items(), key=lambda e: e[0]):
+			for tile in layer.values():
+				tile.editor_draw(surface, camera)
+
+		for checkpoint in self.checkpoint_data:
+			pygame.draw.circle(surface, "light blue", camera.world_to_screen(checkpoint[0]), 80, width=5)
 
 	def layered_editor_draw(self, surface: pygame.Surface, camera: pygbase.Camera, current_layer: int):
 		for layer_index, layer in sorted(self.tiles.items(), key=lambda e: e[0]):
