@@ -61,6 +61,7 @@ class Game(pygbase.GameState, name="game"):
 		self.heart_of_the_sea = HeartOfTheSeaBoss(self.level.heart_of_the_sea_pos, self.particle_manager)
 
 	def update(self, delta: float):
+		# Level
 		if self.level.update(delta, self.player.pos):
 			self.camera.shake_screen(0.3)
 			self.player.health.heal(100)
@@ -68,6 +69,7 @@ class Game(pygbase.GameState, name="game"):
 
 		self.camera.tick(delta)
 
+		# Particles
 		water_monster_colliders = self.water_monster_group.get_colliders(self.player.pos)
 		self.particle_manager.pass_dynamic_colliders(water_monster_colliders)
 		self.in_water_particle_manager.pass_dynamic_colliders(water_monster_colliders)
@@ -75,6 +77,7 @@ class Game(pygbase.GameState, name="game"):
 		self.in_water_particle_manager.update(delta)
 		particle_collision_positions = self.collision_particle_group.update(delta, water_monster_colliders)
 
+		# Projectiles
 		hits = self.projectile_group.update(delta, [self.player.rect])
 		for hit in hits:
 			if hit[0].colliderect(self.player.rect):
@@ -82,6 +85,7 @@ class Game(pygbase.GameState, name="game"):
 
 				self.camera.shake_screen(0.3)
 
+		# Collision particles
 		particle_collision_circle_colliders = []
 		for particle_collision_info in particle_collision_positions:
 			particle_collision_position = particle_collision_info[0]
@@ -100,6 +104,7 @@ class Game(pygbase.GameState, name="game"):
 
 			particle_collision_circle_colliders.append(pygame.geometry.Circle(particle_collision_position, 10))
 
+		# Monsters
 		set_monsters_to_update = set()
 		if focal_point is not None:
 			set_monsters_to_update = set(focal_point[2])
@@ -107,12 +112,18 @@ class Game(pygbase.GameState, name="game"):
 
 		self.player.update(delta)
 
+		# Boss updates
 		if self.player.pos.distance_to(self.heart_of_the_sea.pos) < 1000:
 			num_to_summon = self.heart_of_the_sea.update(delta)
-			for _ in range(num_to_summon):
-				offset = pygbase.utils.get_angled_vector(random.uniform(0, 360), random.uniform(0, 20))
-				self.water_monster_group.add_water_monster(-1, WaterMonster(self.heart_of_the_sea.pos + offset, self.level, self.in_water_particle_manager, self.projectile_group))
 
+			if num_to_summon != 0:
+				for _ in range(num_to_summon):
+					offset = pygbase.utils.get_angled_vector(random.uniform(0, 360), random.uniform(0, 20))
+					self.water_monster_group.add_water_monster(-1, WaterMonster(self.heart_of_the_sea.pos + offset, self.level, self.in_water_particle_manager, self.projectile_group))
+
+				self.camera.shake_screen(0.4)
+
+		# Camera
 		if self.player.pos.distance_to(self.heart_of_the_sea.pos) < 700:
 			self.camera.lerp_to_target(((pygame.Vector2(self.player.rect.center) * 2 + self.heart_of_the_sea.pos) / 3) - pygame.Vector2(pygbase.Common.get_value("screen_size")) / 2, 2 * delta)
 		if focal_point is not None:
