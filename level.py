@@ -2,6 +2,7 @@ import json
 import logging
 import pathlib
 import random
+from typing import TYPE_CHECKING
 
 import pygame
 import pygame.geometry
@@ -9,6 +10,9 @@ import pygbase
 
 from files import ASSET_DIR
 from tile import Tile
+
+if TYPE_CHECKING:
+	from water_monster import WaterMonsterGroup
 
 
 class Level:
@@ -34,7 +38,8 @@ class Level:
 			0: 0,
 			-1: 0,
 			-2: -1,
-			-3: -2
+			-3: -2,
+			-4: -3
 		}
 
 		# Validate layer keys
@@ -44,19 +49,22 @@ class Level:
 
 		(
 			self.level_player_spawn_pos,
-			self.water_enemy_spawn_locations,
+			self.water_monster_data,
 			self.heart_of_the_sea_pos,
+			self.focal_point_data,
 			self.checkpoint_data
 		) = self.load()
 
-		self.checkpoints = {checkpoint_id: (pygame.geometry.Circle(pos, 80)) for pos, checkpoint_id in self.checkpoint_data}
+		# {id: (pos, strength, radius, monster_ids)}
+		self.current_focal_point = -1
+		self.focal_points: dict[int, tuple[tuple[float, float], float, float, list[int]]] = {focal_id: (pos, strength, radius, monster_ids) for focal_id, pos, strength, radius, monster_ids in self.focal_point_data}  # Points for the camera to lock onto (Prevents player from skipping fighting monsters)
+
+		# {id: (collider, focal_id)}
+		self.checkpoints: dict[int, pygame.geometry.Circle] = {checkpoint_id: pygame.geometry.Circle(pos, 80) for checkpoint_id, pos in self.checkpoint_data}
 		self.checkpoint_lights = {}
 
 		self.lighting_manager = lighting_manager
-		for pos, checkpoint_id in self.checkpoint_data:
-			self.checkpoint_lights[checkpoint_id] = lighting_manager.add_light(pygbase.Light(
-				pos, 1.2, 80, random.uniform(4, 7), random.uniform(2, 3), tint=(255, 255, 200)
-			))
+		self.regen_checkpoints()
 
 		self.current_player_checkpoint_id = -1
 		self.load_progress()
@@ -66,11 +74,36 @@ class Level:
 
 		self.player_on_checkpoint = False
 
+		self.water_monsters: WaterMonsterGroup | None = None
+
+	def regen_checkpoints(self):
+		for light in self.checkpoint_lights.values():
+			self.lighting_manager.remove_light(light)
+		self.checkpoint_lights.clear()
+
+		for checkpoint_id, pos in self.checkpoint_data:
+			self.checkpoint_lights[checkpoint_id] = self.lighting_manager.add_light(pygbase.Light(
+				pos, 1.2, 80, random.uniform(4, 7), random.uniform(2, 3), tint=(255, 255, 200)
+			))
+
 	def get_player_spawn_pos(self) -> tuple[float, float]:
 		if self.current_player_checkpoint_id != -1:
 			return self.checkpoints[self.current_player_checkpoint_id].center
 		else:
 			return 0, 0
+
+	def get_current_focal_point(self) -> tuple[tuple[float, float], float] | None:
+		if self.current_focal_point == -1:
+			return None
+		focal_point = self.focal_points[self.current_focal_point]
+
+		# If there are monsters alive in the group
+		for monster_id in focal_point[3]:
+			if monster_id in self.water_monsters.water_monster_ids:
+				return focal_point[0], focal_point[1]
+
+		# If not
+		return None
 
 	@classmethod
 	def init_save_file(cls, path: pathlib.Path):
@@ -81,19 +114,20 @@ class Level:
 			"player_spawn_pos": [0, 0],
 			"water_enemy_spawn_locations": [],
 			"heart_of_the_sea_pos": [10000, 0],
+			"focal_points": [],
 			"checkpoints": []
 		}
 
 		with open(path, "x") as level_file:
 			level_file.write(json.dumps(init_data))
 
-	def load(self) -> tuple[tuple, list[tuple], tuple, list[tuple[tuple[float, float], int]]]:
+	def load(self) -> tuple[tuple, list[tuple[int, tuple[int, int]]], tuple, list[tuple[int, tuple[float, float], float, float, list]], list[tuple[int, tuple[float, float]]]]:
 		file_path = ASSET_DIR / "levels" / f"{self.LEVEL_NAME}.json"
 
 		if not file_path.is_file():
 			self.init_save_file(file_path)
 
-			return (0, 0), [], (10000, 0), []
+			return (0, 0), [], (10000, 0), [], []
 		else:
 			with open(file_path, "r") as level_file:
 				level_data = json.load(level_file)
@@ -101,6 +135,7 @@ class Level:
 			player_spawn_pos = level_data["player_spawn_pos"] if "player_spawn_pos" in level_data else (0, 0)
 			enemy_spawn_locations = level_data["water_enemy_spawn_locations"] if "water_enemy_spawn_locations" in level_data else []
 			heart_of_the_sea_pos = level_data["heart_of_the_sea_pos"] if "heart_of_the_sea_pos" in level_data else [10000, 0]
+			focal_points = level_data["focal_points"] if "focal_points" in level_data else []
 			checkpoints = level_data["checkpoints"] if "checkpoints" in level_data else []
 
 			for layer_index, layer in level_data["tiles"].items():
@@ -114,7 +149,7 @@ class Level:
 					else:
 						self.add_sheet_tile(tile_pos, int(layer_index), tile["sheet_name"], tile["index"])
 
-			return player_spawn_pos, enemy_spawn_locations, heart_of_the_sea_pos, checkpoints
+			return player_spawn_pos, enemy_spawn_locations, heart_of_the_sea_pos, focal_points, checkpoints
 
 	def save(self):
 		logging.info("Saving level")
@@ -150,8 +185,9 @@ class Level:
 			level_data["tiles"] = json_tiles
 
 			level_data["player_spawn_pos"] = self.level_player_spawn_pos
-			level_data["water_enemy_spawn_locations"] = self.water_enemy_spawn_locations
+			level_data["water_enemy_spawn_locations"] = self.water_monster_data
 			level_data["heart_of_the_sea_pos"] = self.heart_of_the_sea_pos
+			level_data["focal_points"] = self.focal_point_data
 			level_data["checkpoints"] = self.checkpoint_data
 
 			try:
@@ -168,7 +204,10 @@ class Level:
 			return 0
 
 	def get_colliders(self, layer: int = 0) -> tuple[pygame.Rect]:
-		return tuple(tile.rect for tile in self.tiles[layer].values())  # NoQA
+		if layer in self.tiles:
+			return tuple(tile.rect for tile in self.tiles[layer].values())  # NoQA
+		else:
+			return ()  # NoQA
 
 	def get_tile_pos(self, pos: tuple):
 		return int(pos[0] // self.tile_size[0]), int(pos[1] // self.tile_size[1])
@@ -242,11 +281,17 @@ class Level:
 				collided_checkpoint_pos = checkpoint.center
 				break
 
+		if self.current_focal_point == -1:
+			for focal_id, focal_point in self.focal_points.items():
+				if player_pos.distance_to(focal_point[0]) < focal_point[2]:
+					self.current_focal_point = focal_id
+
 		if player_checkpoint_collision and not self.player_on_checkpoint:
 			self.player_on_checkpoint = True
 
 			# Save player progress
-			self.checkpoint_lights[self.current_player_checkpoint_id].set_brightness(1.2)
+			if self.current_player_checkpoint_id != -1:
+				self.checkpoint_lights[self.current_player_checkpoint_id].set_brightness(1.2)
 
 			self.current_player_checkpoint_id = collided_checkpoint_id
 			self.checkpoint_lights[self.current_player_checkpoint_id].set_brightness(1.4)
@@ -270,6 +315,9 @@ class Level:
 		return False
 
 	def draw(self, surface: pygame.Surface, camera: pygbase.Camera, entities: list, entity_layer: int, exclude_layers: set[int] | None = None):
+		for focal_point in self.focal_points.values():
+			pygbase.DebugDisplay.draw_circle(camera.world_to_screen(focal_point[0]), focal_point[2], "yellow")
+
 		exclude_layers = {} if exclude_layers is None else exclude_layers
 
 		for layer_index, layer in sorted(self.tiles.items(), key=lambda e: e[0]):
@@ -322,13 +370,17 @@ class Level:
 
 		pygame.draw.circle(surface, "yellow", camera.world_to_screen(self.level_player_spawn_pos), 50, width=5)
 
-		for water_monster_spawn_pos in self.water_enemy_spawn_locations:
-			pygame.draw.circle(surface, "light blue", camera.world_to_screen(water_monster_spawn_pos), 40, width=5)
+		for water_monster in self.water_monster_data:
+			pygame.draw.circle(surface, "light blue", camera.world_to_screen(water_monster[1]), 40, width=5)
 
 		pygame.draw.circle(surface, "light blue", camera.world_to_screen(self.heart_of_the_sea_pos), 400, width=10)
 
 		for checkpoint in self.checkpoint_data:
-			pygame.draw.circle(surface, "light blue", camera.world_to_screen(checkpoint[0]), 80, width=5)
+			pygame.draw.circle(surface, "light blue", camera.world_to_screen(checkpoint[1]), 80, width=5)
+
+		for _, focal_point, __, radius, ____ in self.focal_point_data:
+			pygame.draw.circle(surface, "yellow", camera.world_to_screen(focal_point), 40, width=0)
+			pygame.draw.circle(surface, "yellow", camera.world_to_screen(focal_point), radius, width=2)
 
 	def layered_editor_draw(self, surface: pygame.Surface, camera: pygbase.Camera, current_layer: int):
 		for layer_index, layer in sorted(self.tiles.items(), key=lambda e: e[0]):

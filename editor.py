@@ -26,7 +26,7 @@ class Editor(pygbase.GameState, name="editor"):
 			(pygbase.UIValue(10), pygbase.UIValue(10)),
 			(pygbase.UIValue(320), pygbase.UIValue(50)),
 			"ui",
-			["Tile", "Sheet", "Entity", "Checkpoint", "View"],
+			["Tile", "Sheet", "Entity", "Checkpoint", "Focal", "View"],
 			self.ui.base_container,
 			bg_colour=(40, 40, 40, 40)
 		))
@@ -50,12 +50,33 @@ class Editor(pygbase.GameState, name="editor"):
 
 		self.entity_editing_ui: pygbase.Frame | None = None
 		self.current_entity_mode: pygbase.TextSelectionMenu | None = None
+		self.latest_water_monster_id = self.find_latest_id(self.level.water_monster_data)
 		self.create_entity_editing_ui()
 
-		self.latest_checkpoint_id = max(self.level.checkpoints.keys()) + 1 if len(self.level.checkpoints) > 0 else 0
+		self.focal_strength: float = 0
+		self.focal_radius = 500
+		self.latest_focal_point_id = self.find_latest_id(self.level.focal_point_data)
+
+		self.focal_id_selector = self.ui.add_element(pygbase.TextSelectionMenu(
+			(pygbase.UIValue(10), pygbase.UIValue(130)),
+			(pygbase.UIValue(320), pygbase.UIValue(50)),
+			"ui",
+			["-1", *[str(focal_point[0]) for focal_point in self.level.focal_point_data]],
+			self.ui.base_container,
+			bg_colour=(40, 40, 40, 40)
+		))
+
+		self.latest_checkpoint_id = self.find_latest_id(self.level.checkpoint_data)
 		logging.debug(f"Latest checkpoint id: {self.latest_checkpoint_id}")
 
 		self.prev_mouse_tile_pos = (0, 0)
+
+	def find_latest_id(self, id_list):
+		max_value = 0
+		for data in id_list:
+			if data[0] > max_value:
+				max_value = data[0]
+		return max_value
 
 	def create_tile_layer_ui(self):
 		self.tile_layer_ui = self.ui.add_frame(pygbase.Frame(
@@ -262,24 +283,42 @@ class Editor(pygbase.GameState, name="editor"):
 				self.tile_editing_ui.active = True
 				self.sheet_tile_editing_ui.active = False
 				self.entity_editing_ui.active = False
+				self.focal_id_selector.active = False
 				self.set_active_sheet_tiles(all_false=True)
 			case "Sheet":
 				self.tile_layer_ui.active = True
 				self.tile_editing_ui.active = False
 				self.sheet_tile_editing_ui.active = True
 				self.entity_editing_ui.active = False
+				self.focal_id_selector.active = False
+
 				self.set_active_sheet_tiles()
 			case "Entity":
 				self.tile_layer_ui.active = False
 				self.tile_editing_ui.active = False
 				self.sheet_tile_editing_ui.active = False
 				self.entity_editing_ui.active = True
+
+				# self.focal_id_selector.ui_pos = (pygbase.UIValue(10), pygbase.UIValue(130))
+				# self.focal_id_selector.reposition()
+				self.focal_id_selector.active = self.current_entity_mode.get_current_text() == "w_monster"
+
+				self.set_active_sheet_tiles(all_false=True)
+			case "Checkpoint":
+				self.tile_layer_ui.active = False
+				self.tile_editing_ui.active = False
+				self.sheet_tile_editing_ui.active = False
+				self.entity_editing_ui.active = False
+				self.focal_id_selector.active = False
+
 				self.set_active_sheet_tiles(all_false=True)
 			case _:
 				self.tile_layer_ui.active = False
 				self.tile_editing_ui.active = False
 				self.sheet_tile_editing_ui.active = False
 				self.entity_editing_ui.active = False
+				self.focal_id_selector.active = False
+
 				self.set_active_sheet_tiles(all_false=True)
 
 				self.lighting_manager.update(delta)
@@ -322,7 +361,15 @@ class Editor(pygbase.GameState, name="editor"):
 								spawn_pos = (self.get_mouse_pos()[0], self.get_mouse_tile_pos()[1] * self.level.tile_size[1])
 							else:
 								spawn_pos = tuple(self.get_mouse_pos())
-							self.level.water_enemy_spawn_locations.append(spawn_pos)
+							self.level.water_monster_data.append((self.latest_water_monster_id, spawn_pos))
+
+							focal_id = int(self.focal_id_selector.get_current_text())
+							if focal_id != -1:
+								for focal_data in self.level.focal_point_data:
+									if focal_data[0] == focal_id:
+										focal_data[4].append(self.latest_water_monster_id)
+
+							self.latest_water_monster_id += 1
 
 						elif self.current_entity_mode.get_current_text() == "heart_of_sea":
 							if pygbase.InputManager.check_modifiers(pygame.KMOD_SHIFT):
@@ -332,9 +379,18 @@ class Editor(pygbase.GameState, name="editor"):
 
 					elif pygbase.InputManager.get_mouse_pressed(2):
 						if self.current_entity_mode.get_current_text() == "w_monster":
-							for pos in self.level.water_enemy_spawn_locations[:]:
-								if self.get_mouse_pos().distance_to(pos) < 40:
-									self.level.water_enemy_spawn_locations.remove(pos)
+							for water_monster in self.level.water_monster_data[:]:
+								if self.get_mouse_pos().distance_to(water_monster[1]) < 40:
+									self.level.water_monster_data.remove(water_monster)
+
+									focal_id = int(self.focal_id_selector.get_current_text())
+									if focal_id != -1:
+										for focal_data in self.level.focal_point_data:
+											if focal_data[0] == focal_id:
+												focal_data[4].append(water_monster[0])
+
+							self.latest_water_monster_id = self.find_latest_id(self.level.water_monster_data)
+
 				case "Checkpoint":
 					if pygbase.InputManager.get_mouse_just_pressed(0):
 						if pygbase.InputManager.check_modifiers(pygame.KMOD_SHIFT):
@@ -342,17 +398,51 @@ class Editor(pygbase.GameState, name="editor"):
 						else:
 							spawn_pos = tuple(self.get_mouse_pos())
 
-						self.level.checkpoint_data.append((spawn_pos, self.latest_checkpoint_id))
+						self.level.checkpoint_data.append((self.latest_checkpoint_id, spawn_pos))
 						self.latest_checkpoint_id += 1
 
 						logging.info(f"Adding checkpoint. Latest id: {self.latest_checkpoint_id}")
 
+						self.level.regen_checkpoints()
+
 					elif pygbase.InputManager.get_mouse_pressed(2):
 						for checkpoint in self.level.checkpoint_data[:]:
-							if self.get_mouse_pos().distance_to(checkpoint[0]) < 80:
+							if self.get_mouse_pos().distance_to(checkpoint[1]) < 80:
 								self.level.checkpoint_data.remove(checkpoint)
 
-						self.latest_checkpoint_id = max(self.level.checkpoints.keys()) + 1 if len(self.level.checkpoints) > 0 else 0
+						self.latest_checkpoint_id = self.find_latest_id(self.level.checkpoint_data)
+
+						self.level.regen_checkpoints()
+
+				case "Focal":
+					scroll = pygbase.InputManager.get_scroll_y()
+
+					# if pygbase.InputManager.check_modifiers(pygame.KMOD_SHIFT):
+					# 	self.focal_strength += scroll
+					# else:
+					self.focal_radius += scroll
+
+					if pygbase.InputManager.get_mouse_just_pressed(0):
+						if pygbase.InputManager.check_modifiers(pygame.KMOD_SHIFT):
+							spawn_pos = (self.get_mouse_pos()[0], self.get_mouse_tile_pos()[1] * self.level.tile_size[1])
+						else:
+							spawn_pos = tuple(self.get_mouse_pos())
+
+						self.level.focal_point_data.append((self.latest_focal_point_id, spawn_pos, self.focal_strength, self.focal_radius, []))
+						self.latest_focal_point_id += 1
+
+						self.focal_id_selector.options = ["-1", *[str(focal_point[0]) for focal_point in self.level.focal_point_data]]
+
+						logging.info(f"Adding focal point. Latest id: {self.latest_focal_point_id}")
+
+					elif pygbase.InputManager.get_mouse_pressed(2):
+						for focal_point in self.level.focal_point_data[:]:
+							if self.get_mouse_pos().distance_to(focal_point[1]) < 30:
+								self.level.focal_point_data.remove(focal_point)
+
+						self.latest_focal_point_id = self.find_latest_id(self.level.focal_point_data)
+
+						self.focal_id_selector.options = ["-1", *[str(focal_point[0]) for focal_point in self.level.focal_point_data]]
 
 			self.prev_mouse_tile_pos = self.get_mouse_tile_pos()
 
@@ -374,6 +464,8 @@ class Editor(pygbase.GameState, name="editor"):
 			case "Entity":
 				self.level.editor_draw(surface, self.camera_controller.camera)
 			case "Checkpoint":
+				self.level.editor_draw(surface, self.camera_controller.camera)
+			case "Focal":
 				self.level.editor_draw(surface, self.camera_controller.camera)
 			case "View":
 				self.level.draw(surface, self.camera_controller.camera, [], 0)
@@ -414,6 +506,9 @@ class Editor(pygbase.GameState, name="editor"):
 					pygame.draw.circle(surface, "yellow", pygame.mouse.get_pos(), 5)
 				case "Checkpoint":
 					pygame.draw.circle(surface, "yellow", pygame.mouse.get_pos(), 5)
+				case "Focal":
+					pygame.draw.circle(surface, "yellow", pygame.mouse.get_pos(), 5)
+					pygame.draw.circle(surface, "yellow", pygame.mouse.get_pos(), self.focal_radius, width=2)
 
 		if self.mode_selector.get_current_text() != "View":
 			# World Reference

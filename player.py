@@ -21,6 +21,8 @@ class Player:
 			in_water_particle_manager: pygbase.ParticleManager,
 			collision_particle_group: CollisionParticleGroup
 	) -> None:
+		self.screen_size = pygbase.Common.get_value("screen_size")
+
 		self.input = pygame.Vector2()
 
 		self.gravity = pygbase.Common.get_value("gravity")
@@ -107,7 +109,7 @@ class Player:
 		self.temperature = Temperature(self.pos, offset=(0, -self.ground_rect.height * 1.2), cooling_speed=15).link_pos(self.pos)
 		gun_duration_secs = 3
 		self.gun_heat = (self.temperature.cooling_speed + self.temperature.max_temperature / gun_duration_secs)
-		self.gun_heat = 0
+		# self.gun_heat = 0
 
 		self.can_fire = True
 
@@ -433,6 +435,12 @@ class Player:
 
 		self.prev_pos = self.pos.copy()
 		self.prev_fire_gun_offset = self.fire_gun_offset
+
+		screen_pos = self.camera.world_to_screen(self.pos)
+		if screen_pos[0] < -200:
+			self.pos = self.camera.screen_to_world((-200, screen_pos[1]))
+		elif screen_pos[0] > self.screen_size[0] + 200:
+			self.pos = self.camera.screen_to_world((self.screen_size[0] + 200, screen_pos[1]))
 
 	def draw(self, surface: pygame.Surface, camera: pygbase.Camera):
 		self.animation.draw_at_pos(surface, self.pos, camera, flip=(self.flip_x, False), draw_pos="midbottom")

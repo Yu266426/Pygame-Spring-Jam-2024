@@ -37,11 +37,13 @@ class Game(pygbase.GameState, name="game"):
 		self.in_water_particle_manager.generate_chunked_colliders(self.level.get_colliders())
 
 		self.water_monster_group = WaterMonsterGroup()
-		for spawn_pos in self.level.water_enemy_spawn_locations:
-			self.water_monster_group.water_monsters.append(WaterMonster(spawn_pos, self.level, self.in_water_particle_manager, self.projectile_group))
+		for water_enemy in self.level.water_monster_data:
+			self.water_monster_group.add_water_monster(water_enemy[0], WaterMonster(water_enemy[1], self.level, self.in_water_particle_manager, self.projectile_group))
+		self.level.water_monsters = self.water_monster_group
 
 		self.on_ground_particle_colliders = {tile_pos: tile.rect for tile_pos, tile in self.level.tiles[0].items()}
-		self.on_ground_particle_colliders.update({tile_pos: tile.rect for tile_pos, tile in self.level.tiles[1].items()})
+		if 1 in self.level.tiles:
+			self.on_ground_particle_colliders.update({tile_pos: tile.rect for tile_pos, tile in self.level.tiles[1].items()})
 
 		self.in_water_particle_colliders = {tile_pos: tile.rect for tile_pos, tile in self.level.tiles[0].items()}
 
@@ -61,6 +63,7 @@ class Game(pygbase.GameState, name="game"):
 	def update(self, delta: float):
 		if self.level.update(delta, self.player.pos):
 			self.camera.shake_screen(0.3)
+			self.player.health.heal(100)
 
 		self.camera.tick(delta)
 
@@ -103,8 +106,11 @@ class Game(pygbase.GameState, name="game"):
 		if self.player.pos.distance_to(self.heart_of_the_sea.pos) < 1000:
 			self.heart_of_the_sea.update(delta)
 
+		focal_point = self.level.get_current_focal_point()
 		if self.player.pos.distance_to(self.heart_of_the_sea.pos) < 700:
 			self.camera.lerp_to_target(((pygame.Vector2(self.player.rect.center) * 2 + self.heart_of_the_sea.pos) / 3) - pygame.Vector2(pygbase.Common.get_value("screen_size")) / 2, 2 * delta)
+		if focal_point is not None:
+			self.camera.lerp_to_target(((pygame.Vector2(self.player.rect.center) + (focal_point[0][0] * focal_point[1], focal_point[0][1] * focal_point[1])) / (1 + focal_point[1])) - pygame.Vector2(pygbase.Common.get_value("screen_size")) / 2, 2 * delta)
 		else:
 			self.camera.lerp_to_target(self.player.rect.center - pygame.Vector2(pygbase.Common.get_value("screen_size")) / 2, 3 * delta)
 
@@ -150,7 +156,8 @@ class Game(pygbase.GameState, name="game"):
 			surface.blit(water_draw_surface, (0, 0))
 		surface.blit(self.outline_draw_surface, (0, 0))
 
-		self.level.single_layer_draw(surface, self.camera, 1)  # Water
+		if 1 in self.level.tiles:
+			self.level.single_layer_draw(surface, self.camera, 1)  # Water
 
 		self.lighting_manager.draw(surface, self.camera)
 

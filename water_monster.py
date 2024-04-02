@@ -1,5 +1,4 @@
 import enum
-import logging.handlers
 import random
 
 import pygame
@@ -26,7 +25,7 @@ class WaterMonsterStates(enum.Enum):
 
 
 class WaterMonsterAI:
-	def __init__(self, linked_pos: pygame.Vector2, temperature: Temperature, search_radius: float = 700, attack_radius: float = 300):
+	def __init__(self, linked_pos: pygame.Vector2, temperature: Temperature, search_radius: float = 1000, attack_radius: float = 400):
 		self.pos = linked_pos
 		self.temperature = temperature
 
@@ -63,7 +62,10 @@ class WaterMonsterAI:
 				elif dist_to_player < self.attack_radius:
 					self.current_state = WaterMonsterStates.GARBAGE_ATTACK
 			case WaterMonsterStates.GARBAGE_ATTACK:
-				self.movement.update(-offset_vector.x, 0)
+				if dist_to_player < self.attack_radius * 0.9:
+					self.movement.x = -offset_vector.x
+				else:
+					self.movement.x = offset_vector.x
 
 				if dist_to_player > self.attack_radius:
 					self.current_state = WaterMonsterStates.SEARCH
@@ -96,6 +98,8 @@ class WaterMonsterAI:
 
 class WaterMonster:
 	def __init__(self, pos: tuple, level: Level, particle_manager: pygbase.ParticleManager, projectile_group: ProjectileGroup):
+		self.id = -1
+
 		self.gravity = pygbase.Common.get_value("gravity")
 		self.water_level = pygbase.Common.get_value("water_level")
 		self.on_ground = False
@@ -300,8 +304,15 @@ class WaterMonster:
 class WaterMonsterGroup:
 	def __init__(self):
 		self.water_monsters: list[WaterMonster] = []
+		self.water_monster_ids: set[int] = set()
 
 		self.monster_update_range = 1200
+
+	def add_water_monster(self, monster_id: int, monster: WaterMonster):
+		self.water_monster_ids.add(monster_id)
+
+		monster.id = monster_id
+		self.water_monsters.append(monster)
 
 	def get_colliders(self, pos: tuple | pygame.Vector2 | None = None, radius: int = 1000) -> list[pygame.Rect]:
 		if pos is None:
@@ -332,5 +343,6 @@ class WaterMonsterGroup:
 			if not water_monster.alive():
 				water_monster.kill()
 				camera.shake_screen(0.5)
+				self.water_monster_ids.remove(water_monster.id)
 
 		self.water_monsters[:] = [water_monster for water_monster in self.water_monsters if water_monster.alive()]
