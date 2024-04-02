@@ -438,9 +438,9 @@ class Player:
 
 		screen_pos = self.camera.world_to_screen(self.pos)
 		if screen_pos[0] < -200:
-			self.pos = self.camera.screen_to_world((-200, screen_pos[1]))
+			self.pos.update(self.camera.screen_to_world((-200, screen_pos[1])))
 		elif screen_pos[0] > self.screen_size[0] + 200:
-			self.pos = self.camera.screen_to_world((self.screen_size[0] + 200, screen_pos[1]))
+			self.pos.update(self.camera.screen_to_world((self.screen_size[0] + 200, screen_pos[1])))
 
 	def draw(self, surface: pygame.Surface, camera: pygbase.Camera):
 		self.animation.draw_at_pos(surface, self.pos, camera, flip=(self.flip_x, False), draw_pos="midbottom")

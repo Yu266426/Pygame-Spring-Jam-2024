@@ -64,6 +64,7 @@ class Game(pygbase.GameState, name="game"):
 		if self.level.update(delta, self.player.pos):
 			self.camera.shake_screen(0.3)
 			self.player.health.heal(100)
+		focal_point = self.level.get_current_focal_point()
 
 		self.camera.tick(delta)
 
@@ -99,14 +100,16 @@ class Game(pygbase.GameState, name="game"):
 
 			particle_collision_circle_colliders.append(pygame.geometry.Circle(particle_collision_position, 10))
 
-		self.water_monster_group.update(delta, self.player.pos + (0, -10 if self.player.is_swimming else -80), particle_collision_circle_colliders, self.camera)
+		set_monsters_to_update = set()
+		if focal_point is not None:
+			set_monsters_to_update = set(focal_point[2])
+		self.water_monster_group.update(delta, self.player.pos + (0, -10 if self.player.is_swimming else -80), particle_collision_circle_colliders, self.camera, set_monsters_to_update)
 
 		self.player.update(delta)
 
 		if self.player.pos.distance_to(self.heart_of_the_sea.pos) < 1000:
 			self.heart_of_the_sea.update(delta)
 
-		focal_point = self.level.get_current_focal_point()
 		if self.player.pos.distance_to(self.heart_of_the_sea.pos) < 700:
 			self.camera.lerp_to_target(((pygame.Vector2(self.player.rect.center) * 2 + self.heart_of_the_sea.pos) / 3) - pygame.Vector2(pygbase.Common.get_value("screen_size")) / 2, 2 * delta)
 		if focal_point is not None:
@@ -126,7 +129,7 @@ class Game(pygbase.GameState, name="game"):
 		if not self.player.health.alive():
 			self.player.kill()
 
-			self.set_next_state(pygbase.FadeTransition(self, Game(), 1.0, (0, 0, 0)))
+			self.set_next_state(pygbase.FadeTransition(self, Game(), 2.0, (0, 0, 0)))
 
 	# if pygbase.InputManager.get_key_pressed(pygame.K_p):
 	# 	mouse_pos = self.camera.screen_to_world(pygame.mouse.get_pos())
@@ -141,7 +144,7 @@ class Game(pygbase.GameState, name="game"):
 		for water_draw_surface in self.water_draw_surfaces.values():
 			water_draw_surface.fill((0, 0, 0, 0))
 
-		near_water_monsters = self.water_monster_group.get_monsters(self.player.pos)
+		near_water_monsters = self.water_monster_group.get_monsters(self.player.pos, radius=1200)
 		self.level.draw(surface, self.camera, [self.heart_of_the_sea, self.player, *near_water_monsters], 0, exclude_layers={1})
 
 		self.projectile_group.draw(surface, self.camera)

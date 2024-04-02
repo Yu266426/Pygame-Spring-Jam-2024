@@ -53,7 +53,7 @@ class Editor(pygbase.GameState, name="editor"):
 		self.latest_water_monster_id = self.find_latest_id(self.level.water_monster_data)
 		self.create_entity_editing_ui()
 
-		self.focal_strength: float = 0
+		self.focal_strength: float = 1
 		self.focal_radius = 500
 		self.latest_focal_point_id = self.find_latest_id(self.level.focal_point_data)
 
@@ -72,11 +72,11 @@ class Editor(pygbase.GameState, name="editor"):
 		self.prev_mouse_tile_pos = (0, 0)
 
 	def find_latest_id(self, id_list):
-		max_value = 0
+		max_value = -1
 		for data in id_list:
 			if data[0] > max_value:
 				max_value = data[0]
-		return max_value
+		return max_value + 1
 
 	def create_tile_layer_ui(self):
 		self.tile_layer_ui = self.ui.add_frame(pygbase.Frame(
@@ -370,6 +370,7 @@ class Editor(pygbase.GameState, name="editor"):
 										focal_data[4].append(self.latest_water_monster_id)
 
 							self.latest_water_monster_id += 1
+							logging.info(f"Adding w_monster. Latest id: {self.latest_water_monster_id}")
 
 						elif self.current_entity_mode.get_current_text() == "heart_of_sea":
 							if pygbase.InputManager.check_modifiers(pygame.KMOD_SHIFT):
@@ -383,11 +384,10 @@ class Editor(pygbase.GameState, name="editor"):
 								if self.get_mouse_pos().distance_to(water_monster[1]) < 40:
 									self.level.water_monster_data.remove(water_monster)
 
-									focal_id = int(self.focal_id_selector.get_current_text())
-									if focal_id != -1:
-										for focal_data in self.level.focal_point_data:
-											if focal_data[0] == focal_id:
-												focal_data[4].append(water_monster[0])
+									for focal_data in self.level.focal_point_data:
+										for water_monster_id in focal_data[4][:]:
+											if water_monster_id == water_monster[0]:
+												focal_data[4].remove(water_monster[0])
 
 							self.latest_water_monster_id = self.find_latest_id(self.level.water_monster_data)
 
@@ -462,7 +462,7 @@ class Editor(pygbase.GameState, name="editor"):
 				else:
 					self.level.single_layer_editor_draw(surface, self.camera_controller.camera, self.get_current_tile_layer())
 			case "Entity":
-				self.level.editor_draw(surface, self.camera_controller.camera)
+				self.level.editor_draw(surface, self.camera_controller.camera, current_focus=int(self.focal_id_selector.get_current_text()))
 			case "Checkpoint":
 				self.level.editor_draw(surface, self.camera_controller.camera)
 			case "Focal":

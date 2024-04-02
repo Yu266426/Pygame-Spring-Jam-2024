@@ -266,20 +266,21 @@ class WaterMonster:
 					self.garbage_throw_timer.set_cooldown(random.uniform(*self.garbage_throw_cooldown_range))
 					self.garbage_throw_timer.start()
 
-	def update(self, delta: float, player_pos: pygame.Vector2):
-		self.ai.update(delta, player_pos, self.level_colliders, self.pos.y > self.water_level)
+	def update(self, delta: float, player_pos: pygame.Vector2, no_ai: bool):
+		if not no_ai:
+			self.ai.update(delta, player_pos, self.level_colliders, self.pos.y > self.water_level)
 
 		self.temperature.tick(delta)
 		self.garbage_throw_timer.tick(delta)
 
+		if not no_ai:
+			if self.pos.y > self.water_level:
+				self.water_movement(delta)
+			else:
+				self.movement(delta)
+
 		self.water_orb_group.update(delta)
-
-		if self.pos.y > self.water_level:
-			self.water_movement(delta)
-		else:
-			self.movement(delta)
 		self.water_orb_average_pos.update(self.water_orb_group.get_orb_average_pos())
-
 		self.attacks(player_pos)
 
 	def draw(self, surface: pygame.Surface, camera: pygbase.Camera):
@@ -326,12 +327,12 @@ class WaterMonsterGroup:
 		else:
 			return [water_monster for water_monster in self.water_monsters if water_monster.pos.distance_to(pos) < radius]
 
-	def update(self, delta: float, pos: tuple | pygame.Vector2, particle_colliders: list[pygame.geometry.Circle], camera: pygbase.Camera):
+	def update(self, delta: float, pos: tuple | pygame.Vector2, particle_colliders: list[pygame.geometry.Circle], camera: pygbase.Camera, should_update: set):
 		for water_monster in self.water_monsters:
 			in_range = water_monster.pos.distance_to(pos) < self.monster_update_range
 
 			if in_range:
-				water_monster.update(delta, pos)
+				water_monster.update(delta, pos, water_monster.id not in should_update)
 
 				for particle_collider in particle_colliders[:]:
 					if particle_collider.colliderect(water_monster.rect):

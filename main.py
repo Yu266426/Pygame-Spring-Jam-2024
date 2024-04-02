@@ -8,7 +8,7 @@ from editor import Editor
 from files import ASSET_DIR
 from game import Game
 
-DEBUG = True
+DEBUG = False
 DO_PROFILE = False
 
 if __name__ == '__main__':

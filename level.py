@@ -92,7 +92,7 @@ class Level:
 		else:
 			return 0, 0
 
-	def get_current_focal_point(self) -> tuple[tuple[float, float], float] | None:
+	def get_current_focal_point(self) -> tuple[tuple[float, float], float, list] | None:
 		if self.current_focal_point == -1:
 			return None
 		focal_point = self.focal_points[self.current_focal_point]
@@ -100,9 +100,10 @@ class Level:
 		# If there are monsters alive in the group
 		for monster_id in focal_point[3]:
 			if monster_id in self.water_monsters.water_monster_ids:
-				return focal_point[0], focal_point[1]
+				return focal_point[0], focal_point[1], focal_point[3]
 
 		# If not
+		self.current_focal_point = -1
 		return None
 
 	@classmethod
@@ -363,7 +364,7 @@ class Level:
 				if tile is not None:
 					tile.draw(surface, camera)
 
-	def editor_draw(self, surface: pygame.Surface, camera: pygbase.Camera):
+	def editor_draw(self, surface: pygame.Surface, camera: pygbase.Camera, current_focus: int = -1):
 		for layer_index, layer in sorted(self.tiles.items(), key=lambda e: e[0]):
 			for tile in layer.values():
 				tile.editor_draw(surface, camera)
@@ -378,9 +379,15 @@ class Level:
 		for checkpoint in self.checkpoint_data:
 			pygame.draw.circle(surface, "light blue", camera.world_to_screen(checkpoint[1]), 80, width=5)
 
-		for _, focal_point, __, radius, ____ in self.focal_point_data:
-			pygame.draw.circle(surface, "yellow", camera.world_to_screen(focal_point), 40, width=0)
-			pygame.draw.circle(surface, "yellow", camera.world_to_screen(focal_point), radius, width=2)
+		for focal_id, focal_point, __, radius, water_monster_ids in self.focal_point_data:
+			color = "yellow" if focal_id == current_focus or current_focus == -1 else "orange"
+			pygame.draw.circle(surface, color, camera.world_to_screen(focal_point), 40, width=0)
+			pygame.draw.circle(surface, color, camera.world_to_screen(focal_point), radius, width=2)
+
+			if focal_id == current_focus:
+				for water_monster in self.water_monster_data:
+					if water_monster[0] in water_monster_ids:
+						pygame.draw.circle(surface, "yellow", camera.world_to_screen(water_monster[1]), 20, width=5)
 
 	def layered_editor_draw(self, surface: pygame.Surface, camera: pygbase.Camera, current_layer: int):
 		for layer_index, layer in sorted(self.tiles.items(), key=lambda e: e[0]):
