@@ -58,7 +58,7 @@ class Game(pygbase.GameState, name="game"):
 		self.player = Player(self.level.get_player_spawn_pos(), self.level, self.camera, self.particle_manager, self.in_water_particle_manager, self.collision_particle_group)
 		self.player_health_bar = HealthBar((20, 20), (260, 50), self.player.health)
 
-		self.heart_of_the_sea = HeartOfTheSeaBoss(self.level.heart_of_the_sea_pos)
+		self.heart_of_the_sea = HeartOfTheSeaBoss(self.level.heart_of_the_sea_pos, self.particle_manager)
 
 	def update(self, delta: float):
 		if self.level.update(delta, self.player.pos):
@@ -108,7 +108,10 @@ class Game(pygbase.GameState, name="game"):
 		self.player.update(delta)
 
 		if self.player.pos.distance_to(self.heart_of_the_sea.pos) < 1000:
-			self.heart_of_the_sea.update(delta)
+			num_to_summon = self.heart_of_the_sea.update(delta)
+			for _ in range(num_to_summon):
+				offset = pygbase.utils.get_angled_vector(random.uniform(0, 360), random.uniform(0, 20))
+				self.water_monster_group.add_water_monster(-1, WaterMonster(self.heart_of_the_sea.pos + offset, self.level, self.in_water_particle_manager, self.projectile_group))
 
 		if self.player.pos.distance_to(self.heart_of_the_sea.pos) < 700:
 			self.camera.lerp_to_target(((pygame.Vector2(self.player.rect.center) * 2 + self.heart_of_the_sea.pos) / 3) - pygame.Vector2(pygbase.Common.get_value("screen_size")) / 2, 2 * delta)

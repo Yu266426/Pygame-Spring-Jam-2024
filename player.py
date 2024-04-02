@@ -436,11 +436,24 @@ class Player:
 		self.prev_pos = self.pos.copy()
 		self.prev_fire_gun_offset = self.fire_gun_offset
 
-		screen_pos = self.camera.world_to_screen(self.pos)
-		if screen_pos[0] < -200:
-			self.pos.update(self.camera.screen_to_world((-200, screen_pos[1])))
-		elif screen_pos[0] > self.screen_size[0] + 200:
-			self.pos.update(self.camera.screen_to_world((self.screen_size[0] + 200, screen_pos[1])))
+		screen_rect = self.camera.world_to_screen_rect(self.rect)
+		if screen_rect.right < -80:
+			screen_rect.right = -80
+			self.velocity.x = 0
+			self.pos.update(self.camera.screen_to_world(screen_rect.midbottom))
+		elif screen_rect.left > self.screen_size[0] + 80:
+			screen_rect.left = self.screen_size[0] + 80
+			self.velocity.x = 0
+			self.pos.update(self.camera.screen_to_world(screen_rect.midbottom))
+
+		if screen_rect.bottom < -80:
+			screen_rect.bottom = -80
+			self.velocity.y = 0
+			self.pos.update(self.camera.screen_to_world(screen_rect.midbottom))
+		elif screen_rect.top > self.screen_size[1] + 80:
+			screen_rect.top = self.screen_size[1] + 80
+			self.velocity.y = 0
+			self.pos.update(self.camera.screen_to_world(screen_rect.midbottom))
 
 	def draw(self, surface: pygame.Surface, camera: pygbase.Camera):
 		self.animation.draw_at_pos(surface, self.pos, camera, flip=(self.flip_x, False), draw_pos="midbottom")

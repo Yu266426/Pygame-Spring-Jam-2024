@@ -15,7 +15,7 @@ from water_orb import WaterOrbGroup
 class WaterMonsterAttacks(enum.Enum):
 	NONE = enum.auto()
 	GARBAGE_THROW = enum.auto()
-	WATER_GUN = enum.auto()
+	WATER_GUN = enum.auto()  # TODO: Implement
 
 
 class WaterMonsterStates(enum.Enum):
@@ -27,7 +27,7 @@ class WaterMonsterStates(enum.Enum):
 class WaterMonsterAI:
 	def __init__(self, linked_pos: pygame.Vector2, temperature: Temperature, search_radius: float = 1000, attack_radius: float = 400):
 		self.pos = linked_pos
-		self.temperature = temperature
+		self.temperature = temperature  # TODO: USE
 
 		self.current_state = WaterMonsterStates.SEARCH
 
@@ -141,6 +141,8 @@ class WaterMonster:
 		self.projectile_group = projectile_group
 		self.garbage_throw_cooldown_range = (0.5, 1.3)
 		self.garbage_throw_timer = pygbase.Timer(0, True, True)
+
+		self.damage_collider = pygame.Rect(0, 0, 50, 100)
 
 	def movement(self, delta):
 		movement = self.ai.get_movement()
@@ -281,11 +283,14 @@ class WaterMonster:
 
 		self.water_orb_group.update(delta)
 		self.water_orb_average_pos.update(self.water_orb_group.get_orb_average_pos())
+		self.damage_collider.center = self.water_orb_average_pos
 		self.attacks(player_pos)
 
 	def draw(self, surface: pygame.Surface, camera: pygbase.Camera):
 		pygbase.DebugDisplay.draw_rect(camera.world_to_screen_rect(self.rect), "yellow")
+		pygbase.DebugDisplay.draw_rect(camera.world_to_screen_rect(self.damage_collider), "yellow")
 		pygbase.DebugDisplay.draw_circle(camera.world_to_screen(self.water_orb_average_pos), 10, "yellow")
+
 		self.water_orb_group.draw(self.outline_draw_surface, self.water_draw_surfaces, camera)
 
 	def draw_ui(self, surface: pygame.Surface, camera: pygbase.Camera):
@@ -310,16 +315,17 @@ class WaterMonsterGroup:
 		self.monster_update_range = 1200
 
 	def add_water_monster(self, monster_id: int, monster: WaterMonster):
-		self.water_monster_ids.add(monster_id)
+		if monster_id != -1:
+			self.water_monster_ids.add(monster_id)
 
 		monster.id = monster_id
 		self.water_monsters.append(monster)
 
 	def get_colliders(self, pos: tuple | pygame.Vector2 | None = None, radius: int = 1000) -> list[pygame.Rect]:
 		if pos is None:
-			return [water_monster.rect for water_monster in self.water_monsters]
+			return [water_monster.damage_collider for water_monster in self.water_monsters]
 		else:
-			return [water_monster.rect for water_monster in self.water_monsters if water_monster.pos.distance_to(pos) < radius]
+			return [water_monster.damage_collider for water_monster in self.water_monsters if water_monster.pos.distance_to(pos) < radius]
 
 	def get_monsters(self, pos: tuple | pygame.Vector2 | None = None, radius: int = 800) -> list[WaterMonster]:
 		if pos is None:
@@ -332,10 +338,10 @@ class WaterMonsterGroup:
 			in_range = water_monster.pos.distance_to(pos) < self.monster_update_range
 
 			if in_range:
-				water_monster.update(delta, pos, water_monster.id not in should_update)
+				water_monster.update(delta, pos, water_monster.id != -1 and water_monster.id not in should_update)
 
 				for particle_collider in particle_colliders[:]:
-					if particle_collider.colliderect(water_monster.rect):
+					if particle_collider.colliderect(water_monster.damage_collider):
 						water_monster.temperature.heat(10)
 						particle_colliders.remove(particle_collider)
 
@@ -344,6 +350,7 @@ class WaterMonsterGroup:
 			if not water_monster.alive():
 				water_monster.kill()
 				camera.shake_screen(0.5)
-				self.water_monster_ids.remove(water_monster.id)
+				if water_monster.id != -1:
+					self.water_monster_ids.remove(water_monster.id)
 
 		self.water_monsters[:] = [water_monster for water_monster in self.water_monsters if water_monster.alive()]
