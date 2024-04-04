@@ -112,6 +112,9 @@ class Projectile:
 		self.collider.center = self.pos
 
 	def update(self, delta: float, colliders: list[pygame.Rect]):
+		if self.velocity.length() < 50:
+			self.has_collided = True
+
 		self.despawn_timer.tick(delta)
 
 		if self.has_collided:

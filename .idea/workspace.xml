@@ -4,65 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5e716f3a-44ea-42ac-ba11-3585d3b1504c" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/art/cave.kra" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/art/cave_background.kra" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/art/dirt_end_right_sand.kra" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/art/sand_1.kra" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/art/sand_step_1.kra" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/art/sand_step_2.kra" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/art/sand_step_3.kra" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/art/sand_step_4.kra" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/art/sand_step_5.kra" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/art/water_end_left.kra" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/fonts/Raleway-Bold.ttf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/sounds/boss_smash.wav" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/sounds/checkpoint.wav" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/sounds/config.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/sounds/explosion-1.wav" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/sounds/explosion-2.wav" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/sounds/explosion.wav" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/sounds/flamethrower.wav" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/sounds/flamethrower_end.wav" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/sounds/flamethrower_start.wav" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/sounds/hitHurt.wav" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/sounds/jump.wav" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/sounds/win.wav" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/tile_sheets/cave.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/tile_sheets/cave_background.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/tile_sheets/water_end_left.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/tiles/blank.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/tiles/dirt_end_right_sand.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/tiles/sand_1.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/tiles/sand_step_1.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/tiles/sand_step_2.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/tiles/sand_step_3.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/tiles/sand_step_4.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/tiles/sand_step_5.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/intro.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sounds/boss_smash.aup3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sounds/flamethrower.aup3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sounds/flamethrower.aup3-wal" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/win_state.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/levels/level.json" beforeDir="false" afterPath="$PROJECT_DIR$/assets/levels/level.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/levels/level_progress.json" beforeDir="false" afterPath="$PROJECT_DIR$/assets/levels/level_progress.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/tile_sheets/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/assets/tile_sheets/config.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/tiles/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/assets/tiles/config.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/boss.py" beforeDir="false" afterPath="$PROJECT_DIR$/boss.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor.py" beforeDir="false" afterPath="$PROJECT_DIR$/editor.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/files.py" beforeDir="false" afterPath="$PROJECT_DIR$/files.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/game.py" beforeDir="false" afterPath="$PROJECT_DIR$/game.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/level.py" beforeDir="false" afterPath="$PROJECT_DIR$/level.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/particle_collider.py" beforeDir="false" afterPath="$PROJECT_DIR$/particle_collider.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/player.py" beforeDir="false" afterPath="$PROJECT_DIR$/player.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/projectiles.py" beforeDir="false" afterPath="$PROJECT_DIR$/projectiles.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/stats.prof" beforeDir="false" afterPath="$PROJECT_DIR$/stats.prof" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tile.py" beforeDir="false" afterPath="$PROJECT_DIR$/tile.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/water_monster.py" beforeDir="false" afterPath="$PROJECT_DIR$/water_monster.py" afterDir="false" />
-    </list>
+    <list default="true" id="5e716f3a-44ea-42ac-ba11-3585d3b1504c" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
