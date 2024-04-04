@@ -40,6 +40,8 @@ class Player:
 		self.acceleration_speed = 1200
 		self.jump_impulse = 600
 
+		self.step_offset = -10
+
 		self.on_ground = False
 		self.turn_timer = pygbase.Timer(0.2, True, False)
 		self.fall_timer = pygbase.Timer(0.1, True, False)
@@ -54,7 +56,7 @@ class Player:
 		self.ground_rect = pygame.Rect((0, 0, 30, 110))
 		self.ground_rect.midbottom = self.pos
 
-		self.water_rect = pygame.Rect((0, 0, 110, 30))
+		self.water_rect = pygame.Rect((0, 0, 90, 30))
 		self.water_rect.midbottom = self.pos
 
 		self.is_swimming = False
@@ -91,6 +93,7 @@ class Player:
 		self.particle_spawner_towards_mouse_offset = 32
 		self.particle_spawner_pos = self.pos + self.fire_gun_offset
 		self.head_pos = self.pos.copy()
+		self.prev_mouse_angle = 0
 
 		self.fire_angle_deviation = 3
 		self.fire_velocity_range = (720, 830)
@@ -107,13 +110,23 @@ class Player:
 		self.thermometer_offset_ground = (0, -self.ground_rect.height - 20)
 		self.thermometer_offset_water = (0, -self.water_rect.height - 20)
 		self.temperature = Temperature(self.pos, offset=(0, -self.ground_rect.height * 1.2), cooling_speed=15).link_pos(self.pos)
-		gun_duration_secs = 3
+		gun_duration_secs = 3.3
 		self.gun_heat = (self.temperature.cooling_speed + self.temperature.max_temperature / gun_duration_secs)
 		# self.gun_heat = 0
 
 		self.can_fire = True
 
 		self.health = Health(100)
+		self.alive = True
+
+		self.flame_sound_playing = False
+		self.flamethrower_start_sound: pygame.mixer.Sound = pygbase.ResourceManager.get_resource("sound", "flamethrower_start")
+		self.flamethrower_sound: pygame.mixer.Sound = pygbase.ResourceManager.get_resource("sound", "flamethrower")
+		self.flamethrower_end_sound: pygame.mixer.Sound = pygbase.ResourceManager.get_resource("sound", "flamethrower_end")
+		self.flame_sound_start_timer = pygbase.Timer(self.flamethrower_start_sound.get_length() - 0.1, True, False)
+		self.flame_sound_timer = pygbase.Timer(self.flamethrower_sound.get_length() - 0.1, True, False)
+
+		self.jump_sound: pygame.mixer.Sound = pygbase.ResourceManager.get_resource("sound", "jump")
 
 	@property
 	def rect(self):
@@ -128,6 +141,8 @@ class Player:
 		self.in_water_particle_manager.remove_spawner(self.boiling_water_spawner)
 		self.in_water_particle_manager.remove_spawner(self.gun_tip_water_spawner)
 		self.in_water_particle_manager.remove_spawner(self.breath_bubbles_spawner)
+
+		self.alive = False
 
 	def ground_movement(self, delta):
 		is_water_animation = self.animation.current_state == "swim"
@@ -168,11 +183,37 @@ class Player:
 		for rect in self.level_colliders:
 			if self.rect.colliderect(rect):
 				if self.velocity.x > 0:
-					self.pos.x = rect.left - self.rect.width / 2
-					self.velocity.x = 0
+					if rect.collidepoint(self.rect.bottomright + pygame.Vector2(0, self.step_offset)):
+						self.pos.x = rect.left - self.rect.width / 2
+						self.velocity.x = 0
+					else:  # Is a step
+						is_step = True
+						for step_rect in self.level_colliders:
+							if step_rect.collidepoint(self.rect.bottomright + pygame.Vector2(0, self.step_offset)) or step_rect.collidepoint(self.rect.topright):
+								is_step = False
+								break
+
+						if is_step:
+							self.pos.y = rect.top
+						else:
+							self.pos.x = rect.left - self.rect.width / 2
+							self.velocity.x = 0
 				elif self.velocity.x < 0:
-					self.pos.x = rect.right + self.rect.width / 2
-					self.velocity.x = 0
+					if rect.collidepoint(self.rect.bottomleft + pygame.Vector2(0, self.step_offset)):
+						self.pos.x = rect.right + self.rect.width / 2
+						self.velocity.x = 0
+					else:  # Is a step
+						is_step = True
+						for step_rect in self.level_colliders:
+							if step_rect.collidepoint(self.rect.bottomleft + pygame.Vector2(0, self.step_offset)) or step_rect.collidepoint(self.rect.topleft):
+								is_step = False
+								break
+
+						if is_step:
+							self.pos.y = rect.top
+						else:
+							self.pos.x = rect.right + self.rect.width / 2
+							self.velocity.x = 0
 
 		self.rect.midbottom = self.pos
 
@@ -189,6 +230,9 @@ class Player:
 			self.acceleration.y -= self.jump_impulse / delta
 			pygbase.DebugDisplay.draw_circle((20, 10), 5, "green")
 			self.fall_timer.finish()
+			self.on_ground = False
+
+			self.jump_sound.play()
 
 		self.velocity.y += self.acceleration.y * delta
 		self.velocity.y = pygame.math.clamp(self.velocity.y, -self.max_speed_y * 2, self.max_speed_y)
@@ -248,11 +292,37 @@ class Player:
 		for rect in self.level_colliders:
 			if self.rect.colliderect(rect):
 				if self.velocity.x > 0:
-					self.pos.x = rect.left - self.rect.width / 2
-					self.velocity.x = 0
+					if rect.collidepoint(self.rect.bottomright + pygame.Vector2(0, self.step_offset)):
+						self.pos.x = rect.left - self.rect.width / 2
+						self.velocity.x = 0
+					else:  # Is a step
+						is_step = True
+						for step_rect in self.level_colliders:
+							if step_rect.collidepoint(self.rect.bottomright + pygame.Vector2(0, self.step_offset)) or step_rect.collidepoint(self.rect.topright):
+								is_step = False
+								break
+
+						if is_step:
+							self.pos.y = rect.top
+						else:
+							self.pos.x = rect.left - self.rect.width / 2
+							self.velocity.x = 0
 				elif self.velocity.x < 0:
-					self.pos.x = rect.right + self.rect.width / 2
-					self.velocity.x = 0
+					if rect.collidepoint(self.rect.bottomleft + pygame.Vector2(0, self.step_offset)):
+						self.pos.x = rect.right + self.rect.width / 2
+						self.velocity.x = 0
+					else:  # Is a step
+						is_step = True
+						for step_rect in self.level_colliders:
+							if step_rect.collidepoint(self.rect.bottomleft + pygame.Vector2(0, self.step_offset)) or step_rect.collidepoint(self.rect.topleft):
+								is_step = False
+								break
+
+						if is_step:
+							self.pos.y = rect.top
+						else:
+							self.pos.x = rect.right + self.rect.width / 2
+							self.velocity.x = 0
 
 		self.rect.midbottom = self.pos
 
@@ -288,6 +358,9 @@ class Player:
 		self.rect.midbottom = self.pos
 
 	def update(self, delta: float):
+		self.flame_sound_start_timer.tick(delta)
+		self.flame_sound_timer.tick(delta)
+
 		self.gun_land_to_water = False
 		self.gun_water_to_land = False
 
@@ -311,8 +384,12 @@ class Player:
 		self.turn_timer.tick(delta)
 		self.fall_timer.tick(delta)
 
-		self.input.x = pygbase.InputManager.get_key_pressed(pygame.K_d) - pygbase.InputManager.get_key_pressed(pygame.K_a)
-		self.input.y = pygbase.InputManager.get_key_pressed(pygame.K_s) - pygbase.InputManager.get_key_pressed(pygame.K_w)
+		if self.alive:
+			self.input.x = pygbase.InputManager.get_key_pressed(pygame.K_d) - pygbase.InputManager.get_key_pressed(pygame.K_a)
+			self.input.y = pygbase.InputManager.get_key_pressed(pygame.K_s) - pygbase.InputManager.get_key_pressed(pygame.K_w)
+		else:
+			self.input.x = 0
+			self.input.y = 0
 
 		if self.is_swimming:
 			self.head_pos.update(
@@ -357,7 +434,7 @@ class Player:
 
 		self.particle_spawner_pos.update(self.pos + self.fire_gun_offset + pygbase.utils.get_angled_vector(angle_to_mouse, self.particle_spawner_towards_mouse_offset))
 
-		if self.prev_pos.y <= self.water_level < self.pos.y or self.prev_pos.y > self.water_level >= self.pos.y:  # Just entered / exited water
+		if self.prev_pos.y <= self.water_level < self.rect.bottom or self.prev_pos.y > self.water_level >= self.rect.bottom:  # Just entered / exited water
 			for _ in range(random.randint(10, 30)):
 				offset = pygbase.utils.get_angled_vector(random.uniform(0, 360), 1)
 
@@ -367,8 +444,8 @@ class Player:
 					(offset.x * 100, abs(offset.y) * -500)
 				)
 
-		prev_gun_tip_pos = self.prev_pos + self.prev_fire_gun_offset + pygbase.utils.get_angled_vector(angle_to_mouse, self.particle_spawner_towards_mouse_offset)
-		gun_tip_pos = self.pos + self.fire_gun_offset + pygbase.utils.get_angled_vector(angle_to_mouse, self.particle_spawner_towards_mouse_offset)
+		prev_gun_tip_pos = self.prev_pos + self.prev_fire_gun_offset + pygbase.utils.get_angled_vector(self.prev_mouse_angle, self.particle_spawner_towards_mouse_offset)
+		gun_tip_pos = pygame.Vector2(self.rect.midbottom) + self.fire_gun_offset + pygbase.utils.get_angled_vector(angle_to_mouse, self.particle_spawner_towards_mouse_offset)
 		if prev_gun_tip_pos.y <= self.water_level < gun_tip_pos.y:
 			self.gun_land_to_water = True
 			self.flamethrower_spawner.active = False
@@ -400,7 +477,18 @@ class Player:
 			self.can_fire = True
 			self.gun_tip_fire_spawner.particle_settings = self.fire_particle_settings
 
-		if pygbase.InputManager.get_mouse_pressed(0) and self.can_fire:
+		if self.alive and pygbase.InputManager.get_mouse_pressed(0) and self.can_fire:
+			if not self.flame_sound_playing:
+				self.flamethrower_start_sound.play()
+				self.flame_sound_start_timer.start()
+				self.flame_sound_playing = True
+				print("start")
+			else:
+				if self.flame_sound_start_timer.done() and self.flame_sound_timer.done():
+					self.flamethrower_sound.play()
+					self.flame_sound_timer.start()
+					print("reg")
+
 			stream_spawner.angle_range = (angle_to_mouse - fire_deviation, angle_to_mouse + fire_deviation)
 
 			mouse_vector = pygbase.utils.get_angled_vector(angle_to_mouse, 1)
@@ -433,8 +521,9 @@ class Player:
 			tip_spawner.amount = 8
 			tip_spawner.active = True
 
-		self.prev_pos = self.pos.copy()
+		self.prev_pos = pygame.Vector2(self.rect.midbottom)
 		self.prev_fire_gun_offset = self.fire_gun_offset
+		self.prev_mouse_angle = angle_to_mouse
 
 		screen_rect = self.camera.world_to_screen_rect(self.rect)
 		if screen_rect.right < -80:
@@ -463,11 +552,15 @@ class Player:
 
 		flip_y = 90 < angle_to_mouse % 360 < 270
 
-		self.fire_gun.draw(surface, camera.world_to_screen(self.pos + self.fire_gun_offset), angle=angle_to_mouse, flip=(False, flip_y), draw_pos="center")
+		if self.alive:
+			self.fire_gun.draw(surface, camera.world_to_screen(self.pos + self.fire_gun_offset), angle=angle_to_mouse, flip=(False, flip_y), draw_pos="center")
+		else:
+			self.fire_gun.draw(surface, camera.world_to_screen(self.pos + self.fire_gun_offset), angle=-90, flip=(False, False), draw_pos="center")
 
 		pygbase.DebugDisplay.draw_rect(camera.world_to_screen_rect(self.rect), "light blue", width=4)
 
 	def draw_ui(self, surface: pygame.Surface, camera: pygbase.Camera):
-		self.temperature.draw(surface, camera)
+		if self.alive:
+			self.temperature.draw(surface, camera)
 
 # print(self.health.health)

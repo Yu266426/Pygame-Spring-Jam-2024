@@ -37,8 +37,9 @@ class WaterMonsterAI:
 		self.movement = pygame.Vector2()
 
 		self.camera = pygbase.Common.get_value("camera")
+		self.tile_size = pygbase.Common.get_value("tile_size")
 
-	def update(self, delta: float, player_pos: pygame.Vector2, level_colliders: tuple[pygame.Rect], in_water: bool):
+	def update(self, delta: float, player_pos: pygame.Vector2, level_colliders: dict[tuple, pygame.Rect], in_water: bool):
 		offset_vector = player_pos - self.pos
 		dist_to_player = offset_vector.length()
 		if offset_vector.length() != 0:
@@ -77,11 +78,18 @@ class WaterMonsterAI:
 
 		has_collided = False
 		in_front_collider = pygame.Rect(self.pos.x + self.movement.x * 20, self.pos.y - 20, 5, 10)
-		for level_collider in level_colliders:
-			if in_front_collider.colliderect(level_collider):
-				has_collided = True
-				self.movement.y = -5000 if in_water else -1
-				break
+		tile_pos = int(self.pos.x // self.tile_size[0]), int(self.pos.y // self.tile_size[1])
+		top_left = (tile_pos[0] - 1, tile_pos[1] - 1)
+		bottom_right = (tile_pos[0] + 1, tile_pos[1] + 1)
+
+		for row in range(top_left[1], bottom_right[1]):
+			for col in range(top_left[0], bottom_right[0]):
+				rect = level_colliders.get((col, row))
+				if rect is not None and rect.colliderect(in_front_collider):
+					if in_front_collider.colliderect(rect):
+						has_collided = True
+						self.movement.y = -5000 if in_water else -1
+						break
 
 		pygbase.DebugDisplay.draw_rect(self.camera.world_to_screen_rect(in_front_collider), "blue" if not has_collided else "red")
 
@@ -123,7 +131,7 @@ class WaterMonster:
 		self.water_orb_average_pos = self.water_orb_group.get_orb_average_pos()
 
 		self.level = level
-		self.level_colliders = self.level.get_colliders(0)
+		self.level_colliders = {tile_pos: tile.rect for tile_pos, tile in self.level.tiles[0].items()}
 
 		self.particle_manager = particle_manager
 		self.water_particle_spawner = particle_manager.add_spawner(
@@ -158,14 +166,20 @@ class WaterMonster:
 		self.pos.x += self.velocity.x * delta + 0.5 * self.acceleration.x * (delta ** 2)
 		self.rect.midbottom = self.pos
 
-		for rect in self.level_colliders:
-			if self.rect.colliderect(rect):
-				if self.velocity.x > 0:
-					self.pos.x = rect.left - self.rect.width / 2
-					self.velocity.x = 0
-				elif self.velocity.x < 0:
-					self.pos.x = rect.right + self.rect.width / 2
-					self.velocity.x = 0
+		tile_pos = int(self.pos.x // self.level.tile_size[0]), int(self.pos.y // self.level.tile_size[1])
+		top_left = (tile_pos[0] - 1, tile_pos[1] - 1)
+		bottom_right = (tile_pos[0] + 1, tile_pos[1] + 1)
+
+		for row in range(top_left[1], bottom_right[1]):
+			for col in range(top_left[0], bottom_right[0]):
+				rect = self.level_colliders.get((col, row))
+				if rect is not None and rect.colliderect(self.rect):
+					if self.velocity.x > 0:
+						self.pos.x = rect.left - self.rect.width / 2
+						self.velocity.x = 0
+					elif self.velocity.x < 0:
+						self.pos.x = rect.right + self.rect.width / 2
+						self.velocity.x = 0
 
 		self.rect.midbottom = self.pos
 
@@ -183,17 +197,23 @@ class WaterMonster:
 		self.pos.y += self.velocity.y * delta + 0.5 * self.acceleration.y * (delta ** 2)
 		self.rect.midbottom = self.pos
 
-		self.on_ground = False
-		for rect in self.level_colliders:
-			if self.rect.colliderect(rect):
-				if self.velocity.y > 0:
-					self.pos.y = rect.top
-					self.velocity.y = 0
-					self.on_ground = True
+		tile_pos = int(self.pos.x // self.level.tile_size[0]), int(self.pos.y // self.level.tile_size[1])
+		top_left = (tile_pos[0] - 1, tile_pos[1] - 1)
+		bottom_right = (tile_pos[0] + 1, tile_pos[1] + 1)
 
-				elif self.velocity.y < 0:
-					self.pos.y = rect.bottom + self.rect.height
-					self.velocity.y = 0
+		self.on_ground = False
+		for row in range(top_left[1], bottom_right[1]):
+			for col in range(top_left[0], bottom_right[0]):
+				rect = self.level_colliders.get((col, row))
+				if rect is not None and rect.colliderect(self.rect):
+					if self.velocity.y > 0:
+						self.pos.y = rect.top
+						self.velocity.y = 0
+						self.on_ground = True
+
+					elif self.velocity.y < 0:
+						self.pos.y = rect.bottom + self.rect.height
+						self.velocity.y = 0
 
 		self.rect.midbottom = self.pos
 
@@ -211,14 +231,20 @@ class WaterMonster:
 		self.pos.x += self.velocity.x * delta + 0.5 * self.acceleration.x * (delta ** 2)
 		self.rect.midbottom = self.pos
 
-		for rect in self.level_colliders:
-			if self.rect.colliderect(rect):
-				if self.velocity.x > 0:
-					self.pos.x = rect.left - self.rect.width / 2
-					self.velocity.x = 0
-				elif self.velocity.x < 0:
-					self.pos.x = rect.right + self.rect.width / 2
-					self.velocity.x = 0
+		tile_pos = int(self.pos.x // self.level.tile_size[0]), int(self.pos.y // self.level.tile_size[1])
+		top_left = (tile_pos[0] - 1, tile_pos[1] - 1)
+		bottom_right = (tile_pos[0] + 1, tile_pos[1] + 1)
+
+		for row in range(top_left[1], bottom_right[1]):
+			for col in range(top_left[0], bottom_right[0]):
+				rect = self.level_colliders.get((col, row))
+				if rect is not None and rect.colliderect(self.rect):
+					if self.velocity.x > 0:
+						self.pos.x = rect.left - self.rect.width / 2
+						self.velocity.x = 0
+					elif self.velocity.x < 0:
+						self.pos.x = rect.right + self.rect.width / 2
+						self.velocity.x = 0
 
 		self.rect.midbottom = self.pos
 
@@ -234,15 +260,21 @@ class WaterMonster:
 		self.pos.y += self.velocity.y * delta + 0.5 * self.acceleration.y * (delta ** 2)
 		self.rect.midbottom = self.pos
 
-		for rect in self.level_colliders:
-			if self.rect.colliderect(rect):
-				if self.velocity.y > 0:
-					self.pos.y = rect.top
-					self.velocity.y = 0
+		tile_pos = int(self.pos.x // self.level.tile_size[0]), int(self.pos.y // self.level.tile_size[1])
+		top_left = (tile_pos[0] - 1, tile_pos[1] - 1)
+		bottom_right = (tile_pos[0] + 1, tile_pos[1] + 1)
 
-				elif self.velocity.y < 0:
-					self.pos.y = rect.bottom + self.rect.height
-					self.velocity.y = 0
+		for row in range(top_left[1], bottom_right[1]):
+			for col in range(top_left[0], bottom_right[0]):
+				rect = self.level_colliders.get((col, row))
+				if rect is not None and rect.colliderect(self.rect):
+					if self.velocity.y > 0:
+						self.pos.y = rect.top
+						self.velocity.y = 0
+
+					elif self.velocity.y < 0:
+						self.pos.y = rect.bottom + self.rect.height
+						self.velocity.y = 0
 
 		self.rect.midbottom = self.pos
 
@@ -314,6 +346,8 @@ class WaterMonsterGroup:
 
 		self.monster_update_range = 1200
 
+		self.monster_death_sounds: list[pygame.mixer.Sound] = [pygbase.ResourceManager.get_resource("sound", sound) for sound in ["explosion", "explosion-1", "explosion-2"]]
+
 	def add_water_monster(self, monster_id: int, monster: WaterMonster):
 		if monster_id != -1:
 			self.water_monster_ids.add(monster_id)
@@ -332,6 +366,19 @@ class WaterMonsterGroup:
 			return self.water_monsters
 		else:
 			return [water_monster for water_monster in self.water_monsters if water_monster.pos.distance_to(pos) < radius]
+
+	def kill_all(self, pos: tuple | pygame.Vector2):
+		for water_monster in self.water_monsters:
+			in_range = water_monster.pos.distance_to(pos) < self.monster_update_range
+
+			water_monster.kill()
+			if water_monster.id != -1:
+				self.water_monster_ids.remove(water_monster.id)
+
+		self.water_monsters.clear()
+
+		for _ in range(2):
+			random.choice(self.monster_death_sounds).play()
 
 	def update(self, delta: float, pos: tuple | pygame.Vector2, particle_colliders: list[pygame.geometry.Circle], camera: pygbase.Camera, should_update: set):
 		for water_monster in self.water_monsters:
@@ -352,5 +399,7 @@ class WaterMonsterGroup:
 				camera.shake_screen(0.5)
 				if water_monster.id != -1:
 					self.water_monster_ids.remove(water_monster.id)
+
+				random.choice(self.monster_death_sounds).play()
 
 		self.water_monsters[:] = [water_monster for water_monster in self.water_monsters if water_monster.alive()]

@@ -94,9 +94,9 @@ class CollisionParticleGroup:
 			surrounding_colliders = []
 			for row in range(top_left[1], bottom_right[1]):
 				for col in range(top_left[0], bottom_right[0]):
-					tile = self.colliders.get((col, row))
-					if tile is not None:
-						surrounding_colliders.append(tile)
+					rect = self.colliders.get((col, row))
+					if rect is not None:
+						surrounding_colliders.append(rect)
 
 			collision_pos = particle.update(delta, [*dynamic_colliders, *surrounding_colliders])
 			if collision_pos is not None:

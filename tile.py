@@ -48,6 +48,21 @@ class Tile:
 			self.image = image_cache[(self.parallax_layer, tile_name)]
 
 		# Custom tiles
+		if tile_name == "sand_step_1":
+			pixels_down = 1
+			self.collider_rect = pygame.Rect(self.pos.x, self.pos.y + self.rect.height * (pixels_down / 16), self.rect.width, self.rect.height * ((16 - pixels_down) / 16))
+		elif tile_name == "sand_step_2":
+			pixels_down = 3
+			self.collider_rect = pygame.Rect(self.pos.x, self.pos.y + self.rect.height * (pixels_down / 16), self.rect.width, self.rect.height * ((16 - pixels_down) / 16))
+		elif tile_name == "sand_step_3":
+			pixels_down = 4
+			self.collider_rect = pygame.Rect(self.pos.x, self.pos.y + self.rect.height * (pixels_down / 16), self.rect.width, self.rect.height * ((16 - pixels_down) / 16))
+		elif tile_name == "sand_step_4":
+			pixels_down = 5
+			self.collider_rect = pygame.Rect(self.pos.x, self.pos.y + self.rect.height * (pixels_down / 16), self.rect.width, self.rect.height * ((16 - pixels_down) / 16))
+		elif tile_name == "sand_step_5":
+			pixels_down = 6
+			self.collider_rect = pygame.Rect(self.pos.x, self.pos.y + self.rect.height * (pixels_down / 16), self.rect.width, self.rect.height * ((16 - pixels_down) / 16))
 
 		return self
 
@@ -85,11 +100,20 @@ class Tile:
 	def editor_draw(self, surface: pygame.Surface, camera: pygbase.Camera):
 		surface.blit(self.image, self._get_parallax_pos(camera))
 
+		if self.name is not None and self.name == "blank":
+			pygame.draw.rect(surface, "red", camera.world_to_screen_rect(self._rect))
+
 	def editor_draw_overlay(self, surface: pygame.Surface, camera: pygbase.Camera):
 		surface.blit(self.image, self._get_parallax_pos(camera), special_flags=pygame.BLEND_ADD)
+
+		if self.name is not None and self.name == "blank":
+			pygame.draw.rect(surface, "dark red", camera.world_to_screen_rect(self._rect))
 
 	def editor_draw_dark(self, surface: pygame.Surface, camera: pygbase.Camera):
 		image = self.image.convert_alpha()
 		image.fill((90, 90, 90, 40), special_flags=pygame.BLEND_MULT)
 
 		surface.blit(image, self._get_parallax_pos(camera))
+
+		if self.name is not None and self.name == "blank":
+			pygame.draw.rect(surface, "dark red", camera.world_to_screen_rect(self._rect))

@@ -1,4 +1,5 @@
 import cProfile
+import json
 import sys
 
 import pygame
@@ -7,8 +8,10 @@ import pygbase
 from editor import Editor
 from files import ASSET_DIR
 from game import Game
+from intro import Intro
+from win_state import Win
 
-DEBUG = True
+DEBUG = False
 DO_PROFILE = False
 
 if __name__ == '__main__':
@@ -17,7 +20,7 @@ if __name__ == '__main__':
 	if "-game" in cl_args and "-editor" in cl_args:
 		raise ValueError("`-game` and `-editor` are mutually exclusive")
 
-	pygbase.init((900, 700), max_light_radius=300)
+	pygbase.init((850, 650), max_light_radius=300)
 
 	if DEBUG:
 		pygbase.DebugDisplay.show()
@@ -97,7 +100,7 @@ if __name__ == '__main__':
 		["light blue"],
 		(6, 12),
 		(6, 8),
-		(2, 2),
+		(1, 1),
 		(0, 0),
 		False,
 		((0.0, 0.1), (0.0, 0.1))
@@ -152,6 +155,7 @@ if __name__ == '__main__':
 	pygbase.add_sprite_sheet_resource("sprite_sheets", 2, str(ASSET_DIR / "sprite_sheets"), default_scale=tile_scale)
 	pygbase.add_image_resource("images", 3, str(ASSET_DIR / "images"), default_scale=tile_scale)
 	pygbase.add_image_resource("ui", 4, str(ASSET_DIR / "ui"))
+	pygbase.add_sound_resource("sound", 5, str(ASSET_DIR / "sounds"), ".wav")
 
 	if DO_PROFILE:
 		profiler = cProfile.Profile()
@@ -167,6 +171,19 @@ if __name__ == '__main__':
 		elif "-editor" in cl_args:
 			pygbase.App(Editor).run()
 		else:
-			pygbase.App(Game).run()
+			start_state = Intro
+
+			progress_file_path = ASSET_DIR / "levels" / f"level_progress.json"
+
+			if progress_file_path.is_file():
+				with open(progress_file_path, "r") as file:
+					data = json.load(file)
+
+				player_progress = data["player_checkpoint"]
+
+				if player_progress != -1:
+					start_state = Game
+
+			pygbase.App(start_state).run()
 
 	pygbase.quit()

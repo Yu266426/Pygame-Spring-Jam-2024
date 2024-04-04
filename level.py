@@ -76,6 +76,8 @@ class Level:
 
 		self.water_monsters: WaterMonsterGroup | None = None
 
+		self.checkpoint_sound: pygame.mixer.Sound = pygbase.ResourceManager.get_resource("sound", "checkpoint")
+
 	def regen_checkpoints(self):
 		for light in self.checkpoint_lights.values():
 			self.lighting_manager.remove_light(light)
@@ -297,6 +299,7 @@ class Level:
 			self.current_player_checkpoint_id = collided_checkpoint_id
 			self.checkpoint_lights[self.current_player_checkpoint_id].set_brightness(1.4)
 
+			self.checkpoint_sound.play()
 			self.save_progress()
 
 			if player_pos.y > self.water_level:
@@ -327,22 +330,20 @@ class Level:
 
 			parallax_key = self.get_parallax_layer(layer_index)
 
-			x_parallax_amount = self.screen_size[0] * (1 + parallax_key * self.parallax_amount) / 2
-			y_parallax_amount = self.screen_size[1] * (1 + parallax_key * self.parallax_amount) / 2
+			x_parallax_amount = self.screen_size[0] * parallax_key * self.parallax_amount
+			y_parallax_amount = self.screen_size[1] * parallax_key * self.parallax_amount
 
-			top_left = self.get_tile_pos(camera.screen_to_world((-x_parallax_amount, -y_parallax_amount)))
-			bottom_right = self.get_tile_pos(camera.screen_to_world((self.screen_size[0] + x_parallax_amount, self.screen_size[1] + y_parallax_amount)))
+			tile_size = (64 * (1 + parallax_key * self.parallax_amount), 64 * (1 + parallax_key * self.parallax_amount))
 
-			# print(top_left, bottom_right)
+			top_left = self.get_tile_pos(camera.screen_to_world((x_parallax_amount, y_parallax_amount)))
+			bottom_right = self.get_tile_pos(camera.screen_to_world((self.screen_size[0] - x_parallax_amount + tile_size[0], self.screen_size[1] - y_parallax_amount + tile_size[1])))
 
 			for row in range(top_left[1], bottom_right[1]):
 				for col in range(top_left[0], bottom_right[0]):
 					tile = layer.get((col, row))
 					if tile is not None:
 						tile.draw(surface, camera)
-
-			# for tile in layer.values():
-			# 	tile.draw(surface, camera)
+			# print(layer_index, col, row)
 
 			if layer_index == entity_layer:
 				for entities in entities:
@@ -352,11 +353,13 @@ class Level:
 		layer = self.tiles[layer_index]
 		parallax_key = self.get_parallax_layer(layer_index)
 
-		x_parallax_amount = self.screen_size[0] * (1 + parallax_key * self.parallax_amount) / 2
-		y_parallax_amount = self.screen_size[1] * (1 + parallax_key * self.parallax_amount) / 2
+		x_parallax_amount = self.screen_size[0] * parallax_key * self.parallax_amount
+		y_parallax_amount = self.screen_size[1] * parallax_key * self.parallax_amount
 
-		top_left = self.get_tile_pos(camera.screen_to_world((-x_parallax_amount, -y_parallax_amount)))
-		bottom_right = self.get_tile_pos(camera.screen_to_world((self.screen_size[0] + x_parallax_amount, self.screen_size[1] + y_parallax_amount)))
+		tile_size = (64 * (1 + parallax_key * self.parallax_amount), 64 * (1 + parallax_key * self.parallax_amount))
+
+		top_left = self.get_tile_pos(camera.screen_to_world((x_parallax_amount, y_parallax_amount)))
+		bottom_right = self.get_tile_pos(camera.screen_to_world((self.screen_size[0] - x_parallax_amount + tile_size[0], self.screen_size[1] - y_parallax_amount + tile_size[1])))
 
 		for row in range(top_left[1], bottom_right[1]):
 			for col in range(top_left[0], bottom_right[0]):
@@ -366,8 +369,19 @@ class Level:
 
 	def editor_draw(self, surface: pygame.Surface, camera: pygbase.Camera, current_focus: int = -1):
 		for layer_index, layer in sorted(self.tiles.items(), key=lambda e: e[0]):
-			for tile in layer.values():
-				tile.editor_draw(surface, camera)
+			parallax_key = self.get_parallax_layer(layer_index)
+
+			x_parallax_amount = self.screen_size[0] * (1 + parallax_key * self.parallax_amount) / 2
+			y_parallax_amount = self.screen_size[1] * (1 + parallax_key * self.parallax_amount) / 2
+
+			top_left = self.get_tile_pos(camera.screen_to_world((-x_parallax_amount, -y_parallax_amount)))
+			bottom_right = self.get_tile_pos(camera.screen_to_world((self.screen_size[0] + x_parallax_amount, self.screen_size[1] + y_parallax_amount)))
+
+			for row in range(top_left[1], bottom_right[1]):
+				for col in range(top_left[0], bottom_right[0]):
+					tile = layer.get((col, row))
+					if tile is not None:
+						tile.editor_draw(surface, camera)
 
 		pygame.draw.circle(surface, "yellow", camera.world_to_screen(self.level_player_spawn_pos), 50, width=5)
 
@@ -391,12 +405,27 @@ class Level:
 
 	def layered_editor_draw(self, surface: pygame.Surface, camera: pygbase.Camera, current_layer: int):
 		for layer_index, layer in sorted(self.tiles.items(), key=lambda e: e[0]):
+			parallax_key = self.get_parallax_layer(layer_index)
+
+			x_parallax_amount = self.screen_size[0] * (1 + parallax_key * self.parallax_amount) / 2
+			y_parallax_amount = self.screen_size[1] * (1 + parallax_key * self.parallax_amount) / 2
+
+			top_left = self.get_tile_pos(camera.screen_to_world((-x_parallax_amount, -y_parallax_amount)))
+			bottom_right = self.get_tile_pos(camera.screen_to_world((self.screen_size[0] + x_parallax_amount, self.screen_size[1] + y_parallax_amount)))
+
 			if layer_index == current_layer:
-				for tile in layer.values():
-					tile.editor_draw(surface, camera)
+				for row in range(top_left[1], bottom_right[1]):
+					for col in range(top_left[0], bottom_right[0]):
+						tile = layer.get((col, row))
+						if tile is not None:
+							tile.editor_draw(surface, camera)
+
 			else:
-				for tile in layer.values():
-					tile.editor_draw_dark(surface, camera)
+				for row in range(top_left[1], bottom_right[1]):
+					for col in range(top_left[0], bottom_right[0]):
+						tile = layer.get((col, row))
+						if tile is not None:
+							tile.editor_draw_dark(surface, camera)
 
 	def single_layer_editor_draw(self, surface: pygame.Surface, camera: pygbase.Camera, current_layer: int):
 		if current_layer in self.tiles:

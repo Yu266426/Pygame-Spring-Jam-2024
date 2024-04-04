@@ -142,7 +142,9 @@ class ProjectileGroup:
 	def __init__(self, level: Level):
 		self.projectiles: list[Projectile] = []
 
-		self.level_colliders = level.get_colliders()
+		self.level_colliders = {tile_pos: tile.rect for tile_pos, tile in level.tiles[0].items()}
+		self.colliders = level.get_colliders()
+		self.tile_size = pygbase.Common.get_value("tile_size")
 
 	def add_projectile(self, projectile: Projectile):
 		self.projectiles.append(projectile)
@@ -151,9 +153,19 @@ class ProjectileGroup:
 		# list[(collider, damage)]
 		hits: list[tuple[pygame.geometry.Circle, int]] = []
 
-		colliders = [*self.level_colliders, *dynamic_colliders]
 		for projectile in self.projectiles:
-			projectile.update(delta, colliders)
+			tile_pos = int(projectile.pos.x // self.tile_size[0]), int(projectile.pos.y // self.tile_size[1])
+			top_left = (tile_pos[0] - 2, tile_pos[1] - 2)
+			bottom_right = (tile_pos[0] + 2, tile_pos[1] + 2)
+
+			surrounding_colliders = []
+			for row in range(top_left[1], bottom_right[1]):
+				for col in range(top_left[0], bottom_right[0]):
+					rect = self.level_colliders.get((col, row))
+					if rect is not None:
+						surrounding_colliders.append(rect)
+
+			projectile.update(delta, [*surrounding_colliders, *dynamic_colliders])
 
 			# print(projectile, projectile.has_collided, projectile.has_just_collided)
 			if projectile.has_just_collided:

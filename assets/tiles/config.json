@@ -1,4 +1,8 @@
 {
+  "blank": {
+    "scale": 4,
+    "rotatable": false
+  },
   "deep_dirt_1": {
     "scale": 4,
     "rotatable": false
@@ -35,6 +39,10 @@
     "scale": 4,
     "rotatable": false
   },
+  "dirt_end_right_sand": {
+    "scale": 4,
+    "rotatable": false
+  },
   "ground_1": {
     "scale": 4,
     "rotatable": false
@@ -60,6 +68,30 @@
     "rotatable": false
   },
   "road_end_right_dirt": {
+    "scale": 4,
+    "rotatable": false
+  },
+  "sand_1": {
+    "scale": 4,
+    "rotatable": false
+  },
+  "sand_step_1": {
+    "scale": 4,
+    "rotatable": false
+  },
+  "sand_step_2": {
+    "scale": 4,
+    "rotatable": false
+  },
+  "sand_step_3": {
+    "scale": 4,
+    "rotatable": false
+  },
+  "sand_step_4": {
+    "scale": 4,
+    "rotatable": false
+  },
+  "sand_step_5": {
     "scale": 4,
     "rotatable": false
   }

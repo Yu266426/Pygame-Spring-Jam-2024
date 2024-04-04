@@ -15,6 +15,22 @@
     "scale": 0,
     "rotatable": false
   },
+  "cave": {
+    "rows": 4,
+    "columns": 4,
+    "tile_width": 16,
+    "tile_height": 16,
+    "scale": 0,
+    "rotatable": false
+  },
+  "cave_background": {
+    "rows": 4,
+    "columns": 4,
+    "tile_width": 16,
+    "tile_height": 16,
+    "scale": 0,
+    "rotatable": false
+  },
   "house_1": {
     "rows": 6,
     "columns": 6,
@@ -34,6 +50,14 @@
   "water": {
     "rows": 5,
     "columns": 3,
+    "tile_width": 16,
+    "tile_height": 16,
+    "scale": 0,
+    "rotatable": false
+  },
+  "water_end_left": {
+    "rows": 5,
+    "columns": 1,
     "tile_width": 16,
     "tile_height": 16,
     "scale": 0,

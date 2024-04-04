@@ -501,7 +501,23 @@ class Editor(pygbase.GameState, name="editor"):
 					if not pygbase.InputManager.get_mouse_pressed(2):
 						Tile(self.get_mouse_tile_pos(), self.tile_size, self.level.get_parallax_layer(self.get_current_tile_layer()), self.level.parallax_amount).set_sprite_sheet(self.current_sheet, self.current_sheet_index).editor_draw_overlay(surface, self.camera_controller.camera)
 					else:
-						pygame.draw.rect(surface, "red", (self.camera_controller.camera.world_to_screen((self.get_mouse_tile_pos()[0] * self.tile_size[0], self.get_mouse_tile_pos()[1] * self.tile_size[1])), self.tile_size), width=2)
+						tile_size = (
+							self.tile_size[0] * (1 + self.level.get_parallax_layer(self.get_current_tile_layer()) * self.level.parallax_amount),
+							self.tile_size[1] * (1 + self.level.get_parallax_layer(self.get_current_tile_layer()) * self.level.parallax_amount)
+						)
+
+						screen_pos = self.camera_controller.camera.world_to_screen((
+							self.get_mouse_tile_pos()[0] * self.tile_size[0],
+							self.get_mouse_tile_pos()[1] * self.tile_size[1]
+						))
+
+						parallax_factor = (1 + self.level.get_parallax_layer(self.get_current_tile_layer()) * self.level.parallax_amount)
+						screen_pos = (
+							(screen_pos[0] - self.screen_size[0] / 2) * parallax_factor + self.screen_size[0] / 2,
+							(screen_pos[1] - self.screen_size[1] / 2) * parallax_factor + self.screen_size[1] / 2
+						)
+
+						pygame.draw.rect(surface, "red", (screen_pos, tile_size), width=2)
 				case "Entity":
 					pygame.draw.circle(surface, "yellow", pygame.mouse.get_pos(), 5)
 				case "Checkpoint":
