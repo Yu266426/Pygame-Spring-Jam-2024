@@ -4,7 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5e716f3a-44ea-42ac-ba11-3585d3b1504c" name="Changes" comment="" />
+    <list default="true" id="5e716f3a-44ea-42ac-ba11-3585d3b1504c" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/Cover Image.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/levels/level_progress.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sounds/flamethrower.aup3" beforeDir="false" afterPath="$PROJECT_DIR$/sounds/flamethrower.aup3" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sounds/flamethrower.aup3-wal" beforeDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -53,11 +60,11 @@
       <recent name="$PROJECT_DIR$/assets/ui" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
       <recent name="$PROJECT_DIR$/assets/fonts" />
       <recent name="$PROJECT_DIR$/assets/sounds" />
       <recent name="$PROJECT_DIR$/assets/sprite_sheets" />
       <recent name="$PROJECT_DIR$/assets/tile_sheets" />
-      <recent name="$PROJECT_DIR$" />
     </key>
   </component>
   <component name="RunAnythingCache">

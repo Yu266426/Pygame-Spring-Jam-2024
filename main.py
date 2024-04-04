@@ -1,5 +1,6 @@
 import cProfile
 import json
+import logging
 import sys
 
 import pygame
@@ -9,7 +10,6 @@ from editor import Editor
 from files import ASSET_DIR
 from game import Game
 from intro import Intro
-from win_state import Win
 
 DEBUG = False
 DO_PROFILE = False
@@ -20,7 +20,7 @@ if __name__ == '__main__':
 	if "-game" in cl_args and "-editor" in cl_args:
 		raise ValueError("`-game` and `-editor` are mutually exclusive")
 
-	pygbase.init((850, 650), max_light_radius=300)
+	pygbase.init((850, 650), logging_level=logging.INFO, max_light_radius=300)
 
 	if DEBUG:
 		pygbase.DebugDisplay.show()
@@ -184,6 +184,6 @@ if __name__ == '__main__':
 				if player_progress != -1:
 					start_state = Game
 
-			pygbase.App(start_state).run()
+			pygbase.App(start_state, title="Boiling Point").run()
 
 	pygbase.quit()

@@ -482,12 +482,10 @@ class Player:
 				self.flamethrower_start_sound.play()
 				self.flame_sound_start_timer.start()
 				self.flame_sound_playing = True
-				print("start")
 			else:
 				if self.flame_sound_start_timer.done() and self.flame_sound_timer.done():
 					self.flamethrower_sound.play()
 					self.flame_sound_timer.start()
-					print("reg")
 
 			stream_spawner.angle_range = (angle_to_mouse - fire_deviation, angle_to_mouse + fire_deviation)
 
