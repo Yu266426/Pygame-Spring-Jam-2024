@@ -27,7 +27,7 @@ class HeartOfTheSeaBoss:
 		self.boiling_water_particle_setting = pygbase.Common.get_particle_setting("boiling_water")
 		self.bubbles_particle_setting = pygbase.Common.get_particle_setting("bubble")
 
-		self.health = Health(20)
+		self.health = Health(2000)
 		self.colliders = [pygame.Rect(0, 0, 120, 20), pygame.Rect(0, 0, 180, 70), pygame.Rect(0, 0, 120, 30)]
 		self.colliders[0].midbottom = self.pos
 		for i in range(1, len(self.colliders)):
